@@ -42,8 +42,8 @@ jobs:
           echo "::error ::secrets.PYPI_API_TOKEN needs to be set for this action"
           exit 1
         fi
-        if [ -z "${{ secrets.TOKEN }}" ]; then
-          echo "::error ::secrets.TOKEN needs to be set for this action"
+        if [ -z "${{ secrets.LL_TOKEN }}" ]; then
+          echo "::error ::secrets.LL_TOKEN needs to be set for this action"
           exit 1
         fi
         if [ "${{ github.event_name == 'workflow_dispatch' }}" = "true" ]; then
@@ -115,7 +115,7 @@ jobs:
       with:
         tag: ${{ steps.version-bump.outputs.new_version }}
         generateReleaseNotes: true
-        token: ${{ secrets.TOKEN }}
+        token: ${{ secrets.LL_TOKEN }}
 
     - name: Publish package
       if: steps.release-needed.outputs.DO_RELEASE == 'true' && env.PYPI_PUBLISH == '1'
