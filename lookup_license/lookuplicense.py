@@ -11,7 +11,11 @@ import logging
 import sys
 import time
 
+from flame.license_db import FossLicenses
+
 MAX_CACHE_SIZE = 10000
+MIN_SCORE=80
+MIN_LICENSE_LENGTH=200
 
 class LicenseCache(LFUCache):
 
@@ -25,6 +29,7 @@ class LookupLicense():
     def __init__(self):
         logging.debug("Creating LicenseLookup object")
         self.idx = None
+        self.fl = FossLicenses()
 
     def __init_license_index(self):
         if not self.idx:
@@ -34,13 +39,38 @@ class LookupLicense():
             
     @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
     def lookup_license_text(self, license_text):
+        # if short license text, it is probably a license name
+        # try normalizing with foss-flame 
+        if len(license_text) < MIN_LICENSE_LENGTH:
+            try:
+                res = self.fl.expression_license(license_text)
+                return {
+                    "identification": "flame",
+                    "provided": license_text,
+                    "normalized": [ res['identified_license'] ],
+                    "meta": res
+                }
+            except:
+                pass
+
+        # either we have a long license text or foss-flame normalization failed
+        # proceed with "our" lookup
         self.__init_license_index()
         ret = self.idx.match(
             query_string=license_text,
-            min_score=0,
+            min_score=MIN_SCORE,
             unknown_licenses=False,
         )
-        return [r.to_dict() for r in ret]
+        #print("r" + str(ret))
+        scan_result = [r.to_dict() for r in ret]
+        #print("r" + str(scan_result))
+        identified_licenses = [ self.fl.expression_license(s['license_expression'])['identified_license'] for s in scan_result]
+        return {
+            "identification": "lookup-license",
+            "provided": license_text,
+            "normalized": identified_licenses,
+            "meta": scan_result
+        }
     
     def lookup_license_file(self, license_file):
         self.__init_license_index()
