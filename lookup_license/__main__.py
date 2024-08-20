@@ -2,6 +2,7 @@
 
 from argparse import RawTextHelpFormatter
 import argparse
+import json
 import logging
 
 from lookup_license.lookuplicense import LookupLicense
@@ -68,7 +69,7 @@ def main():
     if args.func:
         try:
             ret = args.func(ll, args)
-            print(str(ret))
+            print(json.dumps(ret, indent=4))
         except Exception as e:
             print(str(e))
 
