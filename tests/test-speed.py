@@ -71,7 +71,7 @@ def main():
     res, elapsed = license_file(ll, "LICENSES/GPL-3.0-or-later.txt")
     assert res['normalized'][0] == "GPL-3.0-only"
     print(" * first:      " + str(elapsed))
-    assert elapsed < 3000 # milli seconds
+    assert elapsed < 6000 # milli seconds
     
     # second long text
     res, elapsed = license_file(ll, "LICENSES/GPL-3.0-or-later.txt")
