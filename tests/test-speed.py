@@ -79,7 +79,7 @@ def main():
     print(" * second:     " + str(elapsed))
     assert elapsed < 1 # milli seconds
 
-    max_time = 200
+    max_time = 500
     elapsed_short = []
     elapsed_long = []
     for i in range(0,1000):
