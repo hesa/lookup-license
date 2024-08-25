@@ -36,7 +36,10 @@ class LookupLicense():
             logging.debug("Initializing license cache")
             self.idx = cache.get_index()
             logging.debug("Initializing license cache finished")
-            
+
+    def __flame_status(self, res):
+        return len(res['ambiguities']) == 0
+
     @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
     def lookup_license_text(self, license_text):
         # if short license text, it is probably a license name
@@ -48,6 +51,8 @@ class LookupLicense():
                     "identification": "flame",
                     "provided": license_text,
                     "normalized": [ res['identified_license'] ],
+                    "ambiguities": len(res['ambiguities']),
+                    "status": self.__flame_status(res),
                     "meta": res
                 }
             except:
@@ -69,6 +74,7 @@ class LookupLicense():
             "identification": "lookup-license",
             "provided": license_text,
             "normalized": identified_licenses,
+            "ambiguities": 0,
             "meta": scan_result
         }
     

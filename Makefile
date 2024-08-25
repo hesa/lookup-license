@@ -33,6 +33,11 @@ py-release: check clean build
 	@echo "To upload: "
 	@echo "twine upload --repository lookup_license --verbose  dist/*"
 
+check-reuse: clean
+	reuse --suppress-deprecation lint
+
+lint: check-reuse py-lint
+
 clean:
 	find . -name "*~"    | xargs rm -fr
 	find . -name "*.pyc" | xargs rm -fr

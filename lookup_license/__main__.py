@@ -1,11 +1,16 @@
 #!/bin/env python3
 
+# SPDX-FileCopyrightText: 2024 Henrik Sandklef
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from argparse import RawTextHelpFormatter
 import argparse
 import json
 import logging
 
 from lookup_license.lookuplicense import LookupLicense
+from lookup_license.ll_shell import LookupLicenseShell
 import lookup_license.config
 
 def get_parser():
@@ -41,6 +46,11 @@ def get_parser():
     parser_lf.set_defaults(which='license-text', func=license_text)
     parser_lf.add_argument('file', type=str, help='license text')
 
+    # interactive shell
+    parser_sh = subparsers.add_parser(
+        'shell', help='Start interactive shell')
+    parser_sh.set_defaults(which='interactive_shell', func=interactive_shell)
+
     return parser
     
 
@@ -58,6 +68,9 @@ def license_text(ll, args):
     result = ll.lookup_license_text(args.file)
     return result
 
+def interactive_shell(ll, args):
+    LookupLicenseShell().cmdloop()
+    return None
 def main():
     args = parse()
 
@@ -69,7 +82,8 @@ def main():
     if args.func:
         try:
             ret = args.func(ll, args)
-            print(json.dumps(ret, indent=4))
+            if ret:
+                print(json.dumps(ret, indent=4))
         except Exception as e:
             print(str(e))
 
