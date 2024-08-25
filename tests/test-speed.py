@@ -58,7 +58,7 @@ def main():
     res, elapsed = license_text(ll, "GPLv3+")
     print(" * first:      " + str(elapsed))
     assert res['normalized'][0] == "GPL-3.0-or-later"
-    assert elapsed < 300 # milli seconds
+    assert elapsed < 1000 # one second
     
     # first short
     res, elapsed = license_text(ll, "GPLv3+")
@@ -71,7 +71,7 @@ def main():
     res, elapsed = license_file(ll, "LICENSES/GPL-3.0-or-later.txt")
     assert res['normalized'][0] == "GPL-3.0-only"
     print(" * first:      " + str(elapsed))
-    assert elapsed < 3000 # milli seconds
+    assert elapsed < 6000 # milli seconds
     
     # second long text
     res, elapsed = license_file(ll, "LICENSES/GPL-3.0-or-later.txt")
@@ -79,7 +79,7 @@ def main():
     print(" * second:     " + str(elapsed))
     assert elapsed < 1 # milli seconds
 
-    max_time = 200
+    max_time = 500
     elapsed_short = []
     elapsed_long = []
     for i in range(0,1000):

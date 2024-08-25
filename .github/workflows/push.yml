@@ -28,7 +28,9 @@ jobs:
     - name: Test
       run: |
         python3 -m unittest
-        #scarfer --version
+        PYTHONPATH=. tests/test-interactive.sh 1
+        PYTHONPATH=. tests/test-misc.py
+        PYTHONPATH=. tests/test-speed.py
       shell: bash
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@v2
