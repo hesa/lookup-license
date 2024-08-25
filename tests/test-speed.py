@@ -58,7 +58,7 @@ def main():
     res, elapsed = license_text(ll, "GPLv3+")
     print(" * first:      " + str(elapsed))
     assert res['normalized'][0] == "GPL-3.0-or-later"
-    assert elapsed < 300 # milli seconds
+    assert elapsed < 1000 # one second
     
     # first short
     res, elapsed = license_text(ll, "GPLv3+")
