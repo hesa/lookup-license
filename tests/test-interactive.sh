@@ -143,3 +143,4 @@ ELAPSED=$(( $STOP - $START ))
 err "Time: $(( $ELAPSED / 1000000)) ms"
 AVG=$(echo "scale=3; $ELAPSED / $CNT / 1000000" | bc -l)
 err "Average: $AVG ms"
+exit $RET

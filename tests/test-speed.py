@@ -4,12 +4,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from argparse import RawTextHelpFormatter
-import argparse
 import glob
-import json
-import logging
-import sys
 import time
 
 from lookup_license.lookuplicense import LookupLicense
@@ -19,14 +14,14 @@ def license_file(ll, license_file):
     start = time.time()
     result = ll.lookup_license_file(license_file)
     end = time.time()
-    elapsed = (end-start) * 10**3
+    elapsed = (end - start) * 10**3
     return result, elapsed
 
 def license_text(ll, text):
     start = time.time()
     result = ll.lookup_license_text(text)
     end = time.time()
-    elapsed = (end-start) * 10**3
+    elapsed = (end - start) * 10**3
     return result, elapsed
 
 
@@ -48,7 +43,7 @@ def __assert_with_info(lic, res, elapsed, max_time, i):
         print("* max time " + (str(max_time)))
         print("* i        " + (str(i)))
         assert elapsed < max_time # milli seconds
-    
+
 
 def main():
     ll = LookupLicense()
@@ -59,20 +54,20 @@ def main():
     print(" * first:      " + str(elapsed))
     assert res['normalized'][0] == "GPL-3.0-or-later"
     assert elapsed < 1000 # one second
-    
+
     # first short
     res, elapsed = license_text(ll, "GPLv3+")
     print(" * second:     " + str(elapsed))
     assert res['normalized'][0] == "GPL-3.0-or-later"
     assert elapsed < 1 # milli seconds
-    
+
     print("Long license:")
     # first long text
     res, elapsed = license_file(ll, "LICENSES/GPL-3.0-or-later.txt")
     assert res['normalized'][0] == "GPL-3.0-only"
     print(" * first:      " + str(elapsed))
     assert elapsed < 6000 # milli seconds
-    
+
     # second long text
     res, elapsed = license_file(ll, "LICENSES/GPL-3.0-or-later.txt")
     assert res['normalized'][0] == "GPL-3.0-only"
@@ -82,28 +77,28 @@ def main():
     max_time = 500
     elapsed_short = []
     elapsed_long = []
-    for i in range(0,1000):
+    for i in range(0, 1000):
         # short license texts
         for lic in LICENSES:
             res, elapsed = license_text(ll, lic)
             __assert_with_info(lic, res, elapsed, max_time, i)
             elapsed_short.append(elapsed)
-            #print("* elapsed  " + (str(elapsed)))
+            # print("* elapsed  " + (str(elapsed)))
 
         # long license texts
         for f in glob.glob('tests/licenses/*.LICENSE'):
             res, elapsed = license_text(ll, lic)
             __assert_with_info(lic, res, elapsed, max_time, i)
             elapsed_long.append(elapsed)
-            #print("* elapsed  " + (str(elapsed)))
-            
+            # print("* elapsed  " + (str(elapsed)))
+
         # the coming lookups should be quick, so lower max_time
         max_time = 1
 
     print()
     print(f'Short average: {sum(elapsed_short)/len(elapsed_short)}, based on {len(elapsed_short)} values')
     print(f'Long average:  {sum(elapsed_long)/len(elapsed_long)}, based on {len(elapsed_long)} values')
-    
-    
+
+
 if __name__ == '__main__':
     main()
