@@ -6,11 +6,13 @@
 
 from argparse import RawTextHelpFormatter
 import argparse
-import json
 import logging
+import sys
 
 from lookup_license.lookuplicense import LookupLicense
+from lookup_license.lookuplicense import LicenseTextReader
 from lookup_license.ll_shell import LookupLicenseShell
+from lookup_license.format import FormatterFactory
 import lookup_license.config
 
 def get_parser():
@@ -31,28 +33,21 @@ def get_parser():
                         help='output version information',
                         default=False)
 
-    parser.set_defaults(which='help', func=version_info)
+    parser.add_argument('-f', '--file',
+                        action='store_true',
+                        help='read license from file',
+                        default=False)
 
-    subparsers = parser.add_subparsers(help='Sub commands')
-    # license file
-    parser_lf = subparsers.add_parser(
-        'file', help='Identify license from license file')
-    parser_lf.set_defaults(which='license', func=license_file)
-    parser_lf.add_argument('file', type=str, help='license file')
+    parser.add_argument('-s', '--shell',
+                        action='store_true',
+                        help='interactive shell',
+                        default=False)
 
-    # license expressions
-    parser_lf = subparsers.add_parser(
-        'expression', help='Identify license from license expression')
-    parser_lf.set_defaults(which='license-text', func=license_text)
-    parser_lf.add_argument('file', type=str, help='license text')
-
-    # interactive shell
-    parser_sh = subparsers.add_parser(
-        'shell', help='Start interactive shell')
-    parser_sh.set_defaults(which='interactive_shell', func=interactive_shell)
-
+    parser.add_argument('input',
+                        type=str,
+                        nargs="*",
+                        help='license string, license file')
     return parser
-    
 
 def parse():
     return get_parser().parse_args()
@@ -60,17 +55,17 @@ def parse():
 def version_info(ll, args):
     return lookup_license.config.lookup_license_version
 
-def license_file(ll, args):
-    result = ll.lookup_license_file(args.file)
+def license_file(ll, license_file):
+    result = ll.lookup_license_file(license_file)
     return result
 
-def license_text(ll, args):
-    result = ll.lookup_license_text(args.file)
+def license_text(ll, texts):
+    result = ll.lookup_license_text(" ".join(texts))
     return result
 
-def interactive_shell(ll, args):
-    LookupLicenseShell().cmdloop()
-    return None
+def interactive_shell(ll):
+    return LookupLicenseShell().cmdloop()
+
 def main():
     args = parse()
 
@@ -78,14 +73,33 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
 
     ll = LookupLicense()
-        
-    if args.func:
-        try:
-            ret = args.func(ll, args)
-            if ret:
-                print(json.dumps(ret, indent=4))
-        except Exception as e:
-            print(str(e))
+
+    try:
+        if args.shell:
+            return interactive_shell(ll)
+        else:
+            if args.input == []:
+                lt_reader = LicenseTextReader()
+                if args.file:
+                    license_file_name = lt_reader.read_license_file()
+                    result = license_file(ll, license_file_name)
+                else:
+                    license_input = lt_reader.read_license_text()
+                    result = license_text(ll, [license_input])
+            elif args.input:
+                if args.file:
+                    result = license_file(ll, args.input)
+                else:
+                    result = license_text(ll, args.input)
+
+            formatter = FormatterFactory.formatter("text")
+            out, err = formatter.format_license(result)
+            if err:
+                print("error" + err, file=sys.stderr)
+            print(out)
+    except Exception as e:
+        print(str(e), file=sys.stderr)
+
 
 if __name__ == '__main__':
     main()
