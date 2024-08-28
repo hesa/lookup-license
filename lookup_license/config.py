@@ -2,6 +2,6 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-lookup_license_version = "0.1.4"
+lookup_license_version = "0.1.5"
 DESCRIPTION = " descr "
 EPILOG = " ...finally..."
