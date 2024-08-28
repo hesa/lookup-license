@@ -28,7 +28,7 @@ class LicenseTextReader():
 
     def __init__(self):
         self.expr_prompt = '> Enter license text and press Control-d.'
-        self.file_prompt = '> Enter license file name and press Control-d.'
+        self.file_prompt = '> Enter license file name and press enter.'
         self.eo_license = 'ENDOFLICENSETEXT'
 
     def read_license_text(self):
@@ -48,8 +48,11 @@ class LicenseTextReader():
 
     def read_license_file(self):
         print(self.file_prompt)
-        license_file = input()
-        return license_file
+        try:
+            license_file = input()
+            return license_file
+        except EOFError:
+            pass
 
 class LookupLicense():
 

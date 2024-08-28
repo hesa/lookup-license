@@ -53,7 +53,6 @@ class LookupLicenseShell(cmd.Cmd):
         if not self.license_reader:
             self.license_reader = LicenseTextReader()
         filename = self.license_reader.read_license_file()
-        filename = input()
         self.verbose(f'Read {filename} charcters from {filename}, looking up the license')
         result = ll.lookup_license_file(filename)
         self.__output_result(result)
