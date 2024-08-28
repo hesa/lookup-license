@@ -4,18 +4,18 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from licensedcode import cache
+from licensedcode import cache # noqa: I900
 from cachetools import LFUCache
 from cachetools import cached
 import logging
 import sys
-import time
+import traceback
 
-from flame.license_db import FossLicenses
+from flame.license_db import FossLicenses # noqa: I900
 
 MAX_CACHE_SIZE = 10000
-MIN_SCORE=80
-MIN_LICENSE_LENGTH=200
+MIN_SCORE = 80
+MIN_LICENSE_LENGTH = 200
 
 class LicenseCache(LFUCache):
 
@@ -24,12 +24,43 @@ class LicenseCache(LFUCache):
         logging.debug(f'Remove cached license item: {key}')
         return key, value
 
+class LicenseTextReader():
+
+    def __init__(self):
+        self.expr_prompt = '> Enter license text and press Control-d.'
+        self.file_prompt = '> Enter license file name and press enter.'
+        self.eo_license = 'ENDOFLICENSETEXT'
+
+    def read_license_text(self):
+        license_lines = []
+        print(self.expr_prompt)
+        while True:
+            try:
+                line = input()
+            except EOFError:
+                break
+            if line == self.eo_license:
+                break
+            license_lines.append(line)
+
+        license_text = '\n'.join(license_lines)
+        return license_text
+
+    def read_license_file(self):
+        print(self.file_prompt)
+        try:
+            license_file = input()
+            return license_file
+        except EOFError:
+            pass
+
 class LookupLicense():
 
     def __init__(self):
         logging.debug("Creating LicenseLookup object")
         self.idx = None
         self.fl = FossLicenses()
+        self.license_reader = None
 
     def __init_license_index(self):
         if not self.idx:
@@ -43,20 +74,21 @@ class LookupLicense():
     @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
     def lookup_license_text(self, license_text):
         # if short license text, it is probably a license name
-        # try normalizing with foss-flame 
+        # try normalizing with foss-flame
         if len(license_text) < MIN_LICENSE_LENGTH:
             try:
                 res = self.fl.expression_license(license_text)
                 return {
                     "identification": "flame",
                     "provided": license_text,
-                    "normalized": [ res['identified_license'] ],
+                    "normalized": [res['identified_license']],
                     "ambiguities": len(res['ambiguities']),
                     "status": self.__flame_status(res),
-                    "meta": res
+                    "meta": res,
                 }
-            except:
-                pass
+            except Exception as e:
+                logging.info(f'Failure: {e}')
+                traceback.print_exc(file=sys.stderr)
 
         # either we have a long license text or foss-flame normalization failed
         # proceed with "our" lookup
@@ -66,21 +98,18 @@ class LookupLicense():
             min_score=MIN_SCORE,
             unknown_licenses=False,
         )
-        #print("r" + str(ret))
         scan_result = [r.to_dict() for r in ret]
-        #print("r" + str(scan_result))
-        identified_licenses = [ self.fl.expression_license(s['license_expression'])['identified_license'] for s in scan_result]
+        identified_licenses = [self.fl.expression_license(s['license_expression'])['identified_license'] for s in scan_result]
         return {
             "identification": "lookup-license",
             "provided": license_text,
             "normalized": identified_licenses,
             "ambiguities": 0,
-            "meta": scan_result
+            "meta": scan_result,
         }
-    
+
     def lookup_license_file(self, license_file):
         self.__init_license_index()
         with open(license_file) as fp:
             content = fp.read()
             return self.lookup_license_text(content)
-    

@@ -13,9 +13,10 @@ python: py-test py-lint
 
 py-test:
 #PYTHONPATH=python/ python3 -m pytest --log-cli-level=10 tests/
+	python3 -m unittest
 
 py-lint:
-#	PYTHONPATH=. flake8
+	PYTHONPATH=. flake8
 
 check-py-cli:
 	@echo -n "Check cli (-h): "
