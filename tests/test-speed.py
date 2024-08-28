@@ -32,7 +32,7 @@ LICENSES = [
     "This is text that does not contain any real license data ... just mumbo jumbo really. And more stupid stuff",
     "BSD",
     "X11",
-    "nada"
+    "nada",
 ]
 
 def __assert_with_info(lic, res, elapsed, max_time, i):
@@ -42,7 +42,7 @@ def __assert_with_info(lic, res, elapsed, max_time, i):
         print("* elapsed  " + (str(elapsed)))
         print("* max time " + (str(max_time)))
         print("* i        " + (str(i)))
-        assert elapsed < max_time # milli seconds
+        assert elapsed < max_time # noqa: S101
 
 
 def main():
@@ -52,27 +52,27 @@ def main():
     # first short
     res, elapsed = license_text(ll, "GPLv3+")
     print(" * first:      " + str(elapsed))
-    assert res['normalized'][0] == "GPL-3.0-or-later"
-    assert elapsed < 1000 # one second
+    assert res['normalized'][0] == "GPL-3.0-or-later" # noqa: S101
+    assert elapsed < 1000 # one second # noqa: S101
 
     # first short
     res, elapsed = license_text(ll, "GPLv3+")
     print(" * second:     " + str(elapsed))
-    assert res['normalized'][0] == "GPL-3.0-or-later"
-    assert elapsed < 1 # milli seconds
+    assert res['normalized'][0] == "GPL-3.0-or-later" # noqa: S101
+    assert elapsed < 1 # milli seconds # noqa: S101
 
     print("Long license:")
     # first long text
     res, elapsed = license_file(ll, "LICENSES/GPL-3.0-or-later.txt")
-    assert res['normalized'][0] == "GPL-3.0-only"
+    assert res['normalized'][0] == "GPL-3.0-only" # noqa: S101
     print(" * first:      " + str(elapsed))
-    assert elapsed < 6000 # milli seconds
+    assert elapsed < 6000 # milli seconds # noqa: S101
 
     # second long text
     res, elapsed = license_file(ll, "LICENSES/GPL-3.0-or-later.txt")
-    assert res['normalized'][0] == "GPL-3.0-only"
+    assert res['normalized'][0] == "GPL-3.0-only" # noqa: S101
     print(" * second:     " + str(elapsed))
-    assert elapsed < 1 # milli seconds
+    assert elapsed < 1 # milli seconds # noqa: S101
 
     max_time = 500
     elapsed_short = []
@@ -83,14 +83,12 @@ def main():
             res, elapsed = license_text(ll, lic)
             __assert_with_info(lic, res, elapsed, max_time, i)
             elapsed_short.append(elapsed)
-            # print("* elapsed  " + (str(elapsed)))
 
         # long license texts
         for f in glob.glob('tests/licenses/*.LICENSE'):
-            res, elapsed = license_text(ll, lic)
+            res, elapsed = license_text(ll, f)
             __assert_with_info(lic, res, elapsed, max_time, i)
             elapsed_long.append(elapsed)
-            # print("* elapsed  " + (str(elapsed)))
 
         # the coming lookups should be quick, so lower max_time
         max_time = 1

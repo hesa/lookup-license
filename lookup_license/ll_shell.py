@@ -28,24 +28,19 @@ class LookupLicenseShell(cmd.Cmd):
         if self.verbose_mode:
             print(string, end=end)
 
-    def edo_help(self, arg):
-        ''
-        print("helpie...")
-
     def do_exit(self, arg):
-        'Exit the interactive shell'
+        """Exit the interactive shell"""
         return True
 
     def do_EOF(self, args):
-        'Sending EOF (e.g. Cotrnol-d) will exit the interactive shell'
+        """Sending EOF (e.g. Cotrnol-d) will exit the interactive shell"""
         return True
 
     def emptyline(self):
-        print("empty...")
         return self.do_text(None)
 
     def do_text(self, arg):
-        'Provide a license text for license lookup. After issuing "text", copy/paste the license text to input (stdin) and send EOF (e.g. by pressing Control-d) and type ENDOFLICENSETEXT.'
+        """Provide a license text for license lookup. After issuing "text", copy/paste the license text to input (stdin) and send EOF (e.g. by pressing Control-d) and type ENDOFLICENSETEXT."""
         if not self.license_reader:
             self.license_reader = LicenseTextReader()
         license_text = self.license_reader.read_license_text()
@@ -54,7 +49,7 @@ class LookupLicenseShell(cmd.Cmd):
         self.__output_result(result)
 
     def do_file(self, arg):
-        'Provide a file name (containing a license text) for license lookup. After issuing "file", write the filename /paste the license text to input (stdin) and press enter.'
+        """Provide a file name (containing a license text) for license lookup. After issuing "file", write the filename /paste the license text to input (stdin) and press enter."""
         if not self.license_reader:
             self.license_reader = LicenseTextReader()
         filename = self.license_reader.read_license_file()
@@ -64,11 +59,11 @@ class LookupLicenseShell(cmd.Cmd):
         self.__output_result(result)
 
     def do_verbose(self, arg):
-        'Make the interaction more verbose.'
+        """Make the interaction more verbose."""
         self.verbose_mode = True
 
     def do_silent(self, arg):
-        'Make the interaction less verbose (default).'
+        """Make the interaction less verbose (default)."""
         self.verbose_mode = False
 
     def __output_result(self, result):

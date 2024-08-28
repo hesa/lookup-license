@@ -4,14 +4,14 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from licensedcode import cache
+from licensedcode import cache # noqa: I900
 from cachetools import LFUCache
 from cachetools import cached
 import logging
 import sys
 import traceback
 
-from flame.license_db import FossLicenses
+from flame.license_db import FossLicenses # noqa: I900
 
 MAX_CACHE_SIZE = 10000
 MIN_SCORE = 80
@@ -81,7 +81,7 @@ class LookupLicense():
                     "normalized": [res['identified_license']],
                     "ambiguities": len(res['ambiguities']),
                     "status": self.__flame_status(res),
-                    "meta": res
+                    "meta": res,
                 }
             except Exception as e:
                 logging.info(f'Failure: {e}')
@@ -102,7 +102,7 @@ class LookupLicense():
             "provided": license_text,
             "normalized": identified_licenses,
             "ambiguities": 0,
-            "meta": scan_result
+            "meta": scan_result,
         }
 
     def lookup_license_file(self, license_file):
