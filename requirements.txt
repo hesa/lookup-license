@@ -5,3 +5,5 @@
 cachetools
 scancode-toolkit
 foss-flame
+python-magic
+requests
