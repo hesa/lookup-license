@@ -83,7 +83,7 @@ class LookupLicense():
             proj = url_split[4]
             rest = "/".join([x for x in url_split[5:] if x != 'blob'])
             new = f'https://raw.githubusercontent.com/{org}/{proj}/{rest}'
-            logging.info(" fixed license url: " + url + "  --->   " + new, file=sys.stderr)
+            logging.info(f' fixed license url: {url}  --->   {new}')
             return new
 
     @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
