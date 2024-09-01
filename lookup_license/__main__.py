@@ -38,6 +38,11 @@ def get_parser():
                         help='read license from file',
                         default=False)
 
+    parser.add_argument('-u', '--url',
+                        action='store_true',
+                        help='read license from url',
+                        default=False)
+
     parser.add_argument('-s', '--shell',
                         action='store_true',
                         help='interactive shell',
@@ -57,6 +62,10 @@ def version_info(ll, args):
 
 def license_file(ll, license_file):
     result = ll.lookup_license_file(license_file)
+    return result
+
+def license_url(ll, url):
+    result = ll.lookup_license_url(url)
     return result
 
 def license_text(ll, texts):
@@ -88,7 +97,9 @@ def main():
                     result = license_text(ll, [license_input])
             elif args.input:
                 if args.file:
-                    result = license_file(ll, args.input)
+                    result = license_file(ll, args.input[0])
+                elif args.url:
+                    result = license_url(ll, args.input[0])
                 else:
                     result = license_text(ll, args.input)
 

@@ -44,7 +44,7 @@ lookup-license --file filename
 lookup-license --file 
 > Enter license file name and press Control-d.
 
-# Url lookup (not implemented)
+# Url lookup
 lookup-license --url URL
 
 lookup-license --url 

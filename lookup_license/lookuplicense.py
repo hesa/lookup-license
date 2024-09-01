@@ -8,6 +8,8 @@ from licensedcode import cache # noqa: I900
 from cachetools import LFUCache
 from cachetools import cached
 import logging
+import magic
+import requests
 import sys
 import traceback
 
@@ -29,6 +31,7 @@ class LicenseTextReader():
     def __init__(self):
         self.expr_prompt = '> Enter license text and press Control-d.'
         self.file_prompt = '> Enter license file name and press enter.'
+        self.url_prompt = '> Enter license URL name and press enter.'
         self.eo_license = 'ENDOFLICENSETEXT'
 
     def read_license_text(self):
@@ -54,6 +57,14 @@ class LicenseTextReader():
         except EOFError:
             pass
 
+    def read_license_url(self):
+        print(self.url_prompt)
+        try:
+            license_url = input()
+            return license_url
+        except EOFError:
+            pass
+
 class LookupLicense():
 
     def __init__(self):
@@ -70,6 +81,19 @@ class LookupLicense():
 
     def __flame_status(self, res):
         return len(res['ambiguities']) == 0
+
+    def _is_text(self, buffer):
+        return "ascii" in magic.from_buffer(buffer).lower()
+
+    def _fix_url(self, url):
+        if "https://github.com" in url:
+            url_split = url.split('/')
+            org = url_split[3]
+            proj = url_split[4]
+            rest = "/".join([x for x in url_split[5:] if x != 'blob'])
+            new = f'https://raw.githubusercontent.com/{org}/{proj}/{rest}'
+            logging.info(f' fixed license url: {url}  --->   {new}')
+            return new
 
     @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
     def lookup_license_text(self, license_text):
@@ -113,3 +137,17 @@ class LookupLicense():
         with open(license_file) as fp:
             content = fp.read()
             return self.lookup_license_text(content)
+        
+    def lookup_license_url(self, url):
+        self.__init_license_index()
+        response = requests.get(url, stream=True)
+        content = response.content
+        if not self._is_text(content):
+            new_url = self._fix_url(url)
+            response = requests.get(new_url, stream=True)
+            content = response.content
+        if self._is_text(content):
+            return self.lookup_license_text(str(content.decode('utf-8')))
+
+    def _is_text(self, buffer):
+        return "ascii" in magic.from_buffer(buffer).lower()
