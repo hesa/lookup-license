@@ -104,7 +104,7 @@ def main():
                     result = license_text(ll, args.input)
 
             formatter = FormatterFactory.formatter("text")
-            out, err = formatter.format_license(result)
+            out, err = formatter.format_license(result, args.verbose)
             if err:
                 print("error" + err, file=sys.stderr)
             print(out)
