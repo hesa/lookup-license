@@ -28,7 +28,7 @@ jobs:
     - name: Test
       run: |
         #python3 -m unittest
-        PYTHONPATH=. pytest tests/test-interactive.sh 1
+        PYTHONPATH=. tests/test-interactive.sh 1
         PYTHONPATH=. pytest tests/test-lookup.py
         PYTHONPATH=. pytest tests/test-speed.py
       shell: bash
