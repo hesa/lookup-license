@@ -61,7 +61,7 @@ def test_lookup_license_file_bad():
         
 
 
-# Lookup license file
+# Lookup license url
 # 
 def test_lookup_license_url_good():
     res = ll.lookup_license_url('https://raw.githubusercontent.com/hesa/lookup-license/main/LICENSES/GPL-3.0-or-later.txt')
@@ -73,7 +73,7 @@ def test_lookup_license_url_html():
 
 def test_lookup_license_url_bad():
     res = ll.lookup_license_url('https://github.com/hesa/lookup-license/blob/main/LICENSES/does-not-exist.txt')
-    assert res == None
+    assert res['normalized'] == None
     
 
 
