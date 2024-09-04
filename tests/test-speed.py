@@ -9,7 +9,6 @@ import time
 
 from lookup_license.lookuplicense import LookupLicense
 
-
 def license_file(ll, license_file):
     start = time.time()
     result = ll.lookup_license_file(license_file)
@@ -44,8 +43,7 @@ def __assert_with_info(lic, res, elapsed, max_time, i):
         print("* i        " + (str(i)))
         assert elapsed < max_time # noqa: S101
 
-
-def main():
+def test_speed():
     ll = LookupLicense()
 
     print("Short license:")
@@ -97,6 +95,8 @@ def main():
     print(f'Short average: {sum(elapsed_short)/len(elapsed_short)}, based on {len(elapsed_short)} values')
     print(f'Long average:  {sum(elapsed_long)/len(elapsed_long)}, based on {len(elapsed_long)} values')
 
+def main():
+    test_speed()
 
 if __name__ == '__main__':
     main()

@@ -94,6 +94,15 @@ class LookupLicense():
             new = f'https://raw.githubusercontent.com/{org}/{proj}/{rest}'
             logging.info(f' fixed license url: {url}  --->   {new}')
             return new
+        if "https://cgit.freedesktop.org" in url:
+            url_split = url.split('/')
+            proj = url_split[3]
+            rest = "/".join([x for x in url_split[4:] if x != 'tree'])
+            new = f'https://cgit.freedesktop.org/{proj}/plain/{rest}'
+            return new
+        if "https://gitlab.com/" in url:
+            new = url.replace('/-/blob/','/-/raw/')
+            return new
 
     @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
     def lookup_license_text(self, license_text):
@@ -138,16 +147,50 @@ class LookupLicense():
             content = fp.read()
             return self.lookup_license_text(content)
         
+    @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
     def lookup_license_url(self, url):
+        tried_urls = []
+        logging.debug(f'lookup_license_url({url})')
         self.__init_license_index()
         response = requests.get(url, stream=True)
         content = response.content
-        if not self._is_text(content):
+        code = response.status_code
+        decoded_content = content.decode('utf-8')
+        tried_urls.append({
+            "url": url,
+            "status_code": code,
+            "content": decoded_content,
+        })
+        if code == 404 or not self._is_text(decoded_content):
             new_url = self._fix_url(url)
+            logging.info(f'Trying {new_url} instead of {url})')
             response = requests.get(new_url, stream=True)
+            code = response.status_code
             content = response.content
-        if self._is_text(content):
-            return self.lookup_license_text(str(content.decode('utf-8')))
+            decoded_content = content.decode('utf-8')
+            tried_urls.append({
+                "url": new_url,
+                "status_code": code,
+                "content": decoded_content,
+            })
+        if code == 404 or not self._is_text(decoded_content):
+            return {
+                "identification": "lookup-license",
+                "provided": url,
+                "normalized": None,
+                "ambiguities": 0,
+                "meta": {
+                    "urls": tried_urls,
+                }
+            }
+        logging.debug(f'looking up content: {decoded_content[:20]}')
+        res = self.lookup_license_text(decoded_content)
+        res['provided'] = url
+        res['tried_urls'] = [x['url'] for x in tried_urls]
+        return res
 
     def _is_text(self, buffer):
-        return "ascii" in magic.from_buffer(buffer).lower()
+        buf_type = magic.from_buffer(buffer).lower()
+        text_present = "ascii" in buf_type or "text" in buf_type
+        html_present = "html" in buf_type 
+        return text_present and (not html_present)
