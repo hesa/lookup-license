@@ -27,7 +27,7 @@ class Formatter:
 class JsonFormatter(Formatter):
 
     def format_license(self, lic, verbose=False):
-        return json.dumps(lic), self._ambig_response(lic)
+        return json.dumps(lic), None
 
 class TextFormatter(Formatter):
 
