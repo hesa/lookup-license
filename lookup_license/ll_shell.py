@@ -12,7 +12,7 @@ ll = LookupLicense()
 
 class LookupLicenseShell(cmd.Cmd):
     intro = 'Welcome to the LookupLicense shell. Type help or ? to list commands.\n'
-    prompt = 'LookupLicense> '
+    prompt = '>>> '
     file = None
 
     def __init__(self, verbose=False):
@@ -33,7 +33,7 @@ class LookupLicenseShell(cmd.Cmd):
         return True
 
     def do_EOF(self, args):
-        """Sending EOF (e.g. Cotrnol-d) will exit the interactive shell"""
+        """Sending EOF (e.g. Control-d) will exit the interactive shell"""
         return True
 
     def emptyline(self):
