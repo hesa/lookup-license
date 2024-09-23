@@ -84,7 +84,9 @@ def main():
     ll = LookupLicense()
 
     try:
-        if args.shell:
+        if args.version:
+            print(str(version_info(ll, args)))
+        elif args.shell:
             return interactive_shell(ll)
         else:
             if args.input == []:
