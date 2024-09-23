@@ -123,7 +123,19 @@ err "Finished creating $CNT commands in $ELAPSED seconds"
 
 # pipe commands through shell and strip information for later check (diff)
 START=$(date "+%s%N")
-cat ${LOOKUP_TMP_FILE} | PYTHONPATH=. ./lookup_license/__main__.py  --shell | grep -v -e "ENDOFLICENSETEXT" -e Welcome -e "^$"  | sed 's,LookupLicense> ,,g' | grep "^\["  > ${ACTUAL_OUTPUT}
+
+
+cat ${LOOKUP_TMP_FILE} | \
+    PYTHONPATH=. ./lookup_license/__main__.py  --shell | \
+    grep -v -e ENDOFLICENSETEXT -e Welcome -e \"^$\" | \
+    grep -v "^>>> Enter" | \
+    grep ">>> \[" | \
+    sed 's,>>> ,,g' \
+        > ${ACTUAL_OUTPUT}
+#cat ${LOOKUP_TMP_FILE} | PYTHONPATH=. ./lookup_license/__main__.py  --shell | grep -v -e "ENDOFLICENSETEXT" -e Welcome -e "^$"  | sed 's,LookupLicense> ,,g' | grep "^\["  > ${ACTUAL_OUTPUT}
+
+
+
 
 #
 STOP=$(date "+%s%N")
@@ -138,7 +150,7 @@ then
     RESULT_STRING="OK"
 else
     RESULT_STRING="Fail"
-    
+    echo "diff between  $ACTUAL_OUTPUT $EXPECTED_OUTPUT "
 fi
 err "Diff: $RESULT_STRING"
 ELAPSED=$(( $STOP - $START ))
