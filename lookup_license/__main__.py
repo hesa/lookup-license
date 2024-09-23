@@ -92,6 +92,9 @@ def main():
                 if args.file:
                     license_file_name = lt_reader.read_license_file()
                     result = license_file(ll, license_file_name)
+                elif args.url:
+                    license_url_name = lt_reader.read_license_url()
+                    result = license_url(ll, license_url_name)
                 else:
                     license_input = lt_reader.read_license_text()
                     result = license_text(ll, [license_input])

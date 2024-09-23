@@ -29,14 +29,14 @@ class LicenseCache(LFUCache):
 class LicenseTextReader():
 
     def __init__(self):
-        self.expr_prompt = '> Enter license text and press Control-d.'
-        self.file_prompt = '> Enter license file name and press enter.'
-        self.url_prompt = '> Enter license URL name and press enter.'
+        self.expr_prompt = 'Enter license text and press Control-d.\n>>> '
+        self.file_prompt = 'Enter license file name and press enter.\n>>> '
+        self.url_prompt = 'Enter license URL name and press enter.\n>>> '
         self.eo_license = 'ENDOFLICENSETEXT'
 
     def read_license_text(self):
         license_lines = []
-        print(self.expr_prompt)
+        print(self.expr_prompt, end='')
         while True:
             try:
                 line = input()
@@ -50,7 +50,7 @@ class LicenseTextReader():
         return license_text
 
     def read_license_file(self):
-        print(self.file_prompt)
+        print(self.file_prompt, end='')
         try:
             license_file = input()
             return license_file
@@ -58,7 +58,7 @@ class LicenseTextReader():
             pass
 
     def read_license_url(self):
-        print(self.url_prompt)
+        print(self.url_prompt, end='')
         try:
             license_url = input()
             return license_url
@@ -121,7 +121,7 @@ class LookupLicense():
                 }
             except Exception as e:
                 logging.info(f'Failure: {e}')
-                traceback.print_exc(file=sys.stderr)
+                logging.debug(traceback.format_exc)
 
         # either we have a long license text or foss-flame normalization failed
         # proceed with "our" lookup
