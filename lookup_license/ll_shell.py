@@ -28,6 +28,9 @@ class LookupLicenseShell(cmd.Cmd):
         if self.verbose_mode:
             print(string, end=end)
 
+    def __handle_error(self, error):
+        print(str(error))
+
     def do_exit(self, arg):
         """Exit the interactive shell"""
         return True
@@ -45,8 +48,11 @@ class LookupLicenseShell(cmd.Cmd):
             self.license_reader = LicenseTextReader()
         license_text = self.license_reader.read_license_text()
         self.verbose(f'read {len(license_text)} characters, looking up the license')
-        result = ll.lookup_license_text(license_text)
-        self.__output_result(result)
+        try:
+            result = ll.lookup_license_text(license_text)
+            self.__output_result(result)
+        except Exception as e:
+            self.__handle_error(e)
 
     def do_file(self, arg):
         """Provide a file name (containing a license text) for license lookup. After issuing "file", write the filename /paste the license text to input (stdin) and press enter."""
@@ -54,8 +60,11 @@ class LookupLicenseShell(cmd.Cmd):
             self.license_reader = LicenseTextReader()
         filename = self.license_reader.read_license_file()
         self.verbose(f'Read {filename}, looking up the license')
-        result = ll.lookup_license_file(filename)
-        self.__output_result(result)
+        try:
+            result = ll.lookup_license_file(filename)
+            self.__output_result(result)
+        except Exception as e:
+            self.__handle_error(e)
 
     def do_url(self, arg):
         """Provide a URL (containing a license text) for license lookup. After issuing "url", write the full URL/path to the license file to input (stdin) and press enter."""
@@ -63,8 +72,11 @@ class LookupLicenseShell(cmd.Cmd):
             self.license_reader = LicenseTextReader()
         url = self.license_reader.read_license_url()
         self.verbose(f'Read {url}, looking up the license')
-        result = ll.lookup_license_url(url)
-        self.__output_result(result)
+        try:
+            result = ll.lookup_license_url(url)
+            self.__output_result(result)
+        except Exception as e:
+            self.__handle_error(e)
 
     def do_verbose(self, arg):
         """Make the interaction more verbose."""
