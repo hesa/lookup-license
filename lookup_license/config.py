@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 lookup_license_version = "0.1.9"
+
 DESCRIPTION = """NAME
   lookup-license
 
@@ -28,4 +29,3 @@ ATTRIBUTION
   * https://github.com/aboutcode-org/scancode-toolkit - to identify license from license text
   * https://github.com/hesa/foss-licenses - to identify license frorm "weird" names
 """
-
