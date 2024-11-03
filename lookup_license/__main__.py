@@ -48,6 +48,11 @@ def get_parser():
                         help='interactive shell',
                         default=False)
 
+    parser.add_argument('--validate-spdx',
+                        action='store_true',
+                        help='validate that the resulting license expression is an SPDX license expression',
+                        default=False)
+
     parser.add_argument('input',
                         type=str,
                         nargs="*",
@@ -74,6 +79,12 @@ def license_text(ll, texts):
 
 def interactive_shell(ll):
     return LookupLicenseShell().cmdloop()
+
+def validate(ll, args, expr):
+    if args.validate_spdx:
+        return ll.validate(" AND ".join(expr['normalized']))
+        
+    
 
 def main():
     args = parse()
@@ -109,10 +120,22 @@ def main():
                     result = license_text(ll, args.input)
 
             formatter = FormatterFactory.formatter("text")
-            out, err = formatter.format_license(result, args.verbose)
+            try:
+                validate(ll, args, result)
+                out, err = formatter.format_license(result, args.verbose)
+            except Exception as e:
+                out = ""
+                msg = e
+                out, err = formatter.format_error(e, args.verbose)
             if err:
-                print("error" + err, file=sys.stderr)
-            print(out)
+                print("error: " + err, file=sys.stderr)
+            if out:
+                print(out)
+
+            if err:
+                sys.exit(1)
+            sys.exit(0)
+                
     except Exception as e:
         print(str(e), file=sys.stderr)
 
