@@ -14,6 +14,7 @@ import sys
 import traceback
 
 from flame.license_db import FossLicenses # noqa: I900
+from flame.license_db import Validation
 
 MAX_CACHE_SIZE = 10000
 MIN_SCORE = 80
@@ -110,7 +111,7 @@ class LookupLicense():
         # try normalizing with foss-flame
         if len(license_text) < MIN_LICENSE_LENGTH:
             try:
-                res = self.fl.expression_license(license_text)
+                res = self.fl.expression_license(license_text, update_dual=False)
                 return {
                     "identification": "flame",
                     "provided": license_text,
@@ -132,7 +133,7 @@ class LookupLicense():
             unknown_licenses=False,
         )
         scan_result = [r.to_dict() for r in ret]
-        identified_licenses = [self.fl.expression_license(s['license_expression'])['identified_license'] for s in scan_result]
+        identified_licenses = [self.fl.expression_license(s['license_expression'], update_dual=False)['identified_license'] for s in scan_result]
         return {
             "identification": "lookup-license",
             "provided": license_text,
@@ -194,3 +195,6 @@ class LookupLicense():
         text_present = "ascii" in buf_type or "text" in buf_type
         html_present = "html" in buf_type 
         return text_present and (not html_present)
+
+    def validate(self, expr):
+        return self.fl.expression_license(expr, validations=[Validation.SPDX], update_dual=False)
