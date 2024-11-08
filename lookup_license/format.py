@@ -24,14 +24,21 @@ class Formatter:
     def format_license(self, lic, verbose=False):
         return None, None
 
+    def format_error(self,  exception, verbose=False):
+        return None, None
+
 class JsonFormatter(Formatter):
 
     def format_license(self, lic, verbose=False):
         return json.dumps(lic), None
 
+    def format_error(self,  exception, verbose=False):
+        return json.dumps(msg), None
+
 class TextFormatter(Formatter):
 
     def format_license(self, lic, verbose=False):
+        print("meta: " + str(lic["meta"]))
         ambigs = []
         if lic['ambiguities'] != 0:
             ambigs = [a['description'] for a in lic['meta']['ambiguities']]
@@ -48,3 +55,14 @@ class TextFormatter(Formatter):
         else:
             res = "\n".join(lic['normalized'])
         return res, "\n".join(ambigs)
+
+    def format_error(self, exception, verbose=False):
+        if verbose:
+            import traceback
+            err = "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+            return None, f'{exception}\n{err}'
+
+        else:
+            return None, f'{exception}'
+
+    
