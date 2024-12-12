@@ -53,6 +53,11 @@ def get_parser():
                         help='validate that the resulting license expression is an SPDX license expression',
                         default=False)
 
+    parser.add_argument('--minimum-score',
+                        type=str,
+                        help=f'minimum required score when identifying a license from license text, defaults to {lookup_license.config.default_minimum_score}',
+                        default=lookup_license.config.default_minimum_score)
+
     parser.add_argument('input',
                         type=str,
                         nargs="*",
@@ -73,8 +78,8 @@ def license_url(ll, url):
     result = ll.lookup_license_url(url)
     return result
 
-def license_text(ll, texts):
-    result = ll.lookup_license_text(" ".join(texts))
+def license_text(ll, texts, minimum_score):
+    result = ll.lookup_license_text(" ".join(texts), minimum_score)
     return result
 
 def interactive_shell(ll):
@@ -83,14 +88,13 @@ def interactive_shell(ll):
 def validate(ll, args, expr):
     if args.validate_spdx:
         return ll.validate(" AND ".join(expr['normalized']))
-        
-    
+
 
 def main():
     args = parse()
 
     if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger(lookup_license.config.module_name).setLevel(logging.DEBUG)
 
     ll = LookupLicense()
 
@@ -110,14 +114,14 @@ def main():
                     result = license_url(ll, license_url_name)
                 else:
                     license_input = lt_reader.read_license_text()
-                    result = license_text(ll, [license_input])
+                    result = license_text(ll, [license_input], float(args.minimum_score))
             elif args.input:
                 if args.file:
                     result = license_file(ll, args.input[0])
                 elif args.url:
                     result = license_url(ll, args.input[0])
                 else:
-                    result = license_text(ll, args.input)
+                    result = license_text(ll, args.input, float(args.minimum_score))
 
             formatter = FormatterFactory.formatter("text")
             try:
@@ -125,7 +129,6 @@ def main():
                 out, err = formatter.format_license(result, args.verbose)
             except Exception as e:
                 out = ""
-                msg = e
                 out, err = formatter.format_error(e, args.verbose)
             if err:
                 print("error: " + err, file=sys.stderr)
@@ -135,7 +138,7 @@ def main():
             if err:
                 sys.exit(1)
             sys.exit(0)
-                
+
     except Exception as e:
         print(str(e), file=sys.stderr)
 
