@@ -112,6 +112,7 @@ Enter license text and press Control-d.
 Enter license URL name and press enter.
 >>> https://github.com/psf/requests/blob/main/LICENSE
 ['Apache-2.0']
+```
 
 
 # Acknowledgements
