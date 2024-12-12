@@ -4,6 +4,10 @@
 
 lookup_license_version = "0.1.13"
 
+default_minimum_score = 0.9
+
+module_name = 'lookup_license'
+
 DESCRIPTION = """NAME
   lookup-license
 
@@ -11,7 +15,7 @@ DESCRIPTION
   Python tool to identify license from license text or license names.
 """
 
-EPILOG = f"""
+EPILOG = """
 AUTHOR
   Henrik Sandklef
 

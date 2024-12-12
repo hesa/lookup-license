@@ -24,7 +24,7 @@ class Formatter:
     def format_license(self, lic, verbose=False):
         return None, None
 
-    def format_error(self,  exception, verbose=False):
+    def format_error(self, exception, verbose=False):
         return None, None
 
 class JsonFormatter(Formatter):
@@ -32,28 +32,33 @@ class JsonFormatter(Formatter):
     def format_license(self, lic, verbose=False):
         return json.dumps(lic), None
 
-    def format_error(self,  exception, verbose=False):
-        return json.dumps(msg), None
+    def format_error(self, exception, verbose=False):
+        return json.dumps(exception), None
 
 class TextFormatter(Formatter):
 
     def format_license(self, lic, verbose=False):
-        print("meta: " + str(lic["meta"]))
         ambigs = []
         if lic['ambiguities'] != 0:
             ambigs = [a['description'] for a in lic['meta']['ambiguities']]
         if verbose:
             res_list = []
-            res_list.append(f'Identification: {lic["identification"]}')
-            res_list.append(f'Provided:       {lic["provided"]}')
-            res_list.append(f'Ambiguities:    {lic["ambiguities"]}')
+            res_list.append(f'Provided license:    {lic["provided"]}')
+            res_list.append(f'Identification:      {lic["identification"]}')
+            res_list.append(f'Ambiguities:         {lic["ambiguities"]}')
             if 'tried_urls' in lic:
-                res_list.append(f'Tried urls:     {lic["tried_urls"]}')
-            res_list.append(f'Normalized:     {lic["normalized"]}')
-                
+                res_list.append(f'Tried urls:          {lic["tried_urls"]}')
+                pass
+            res_list.append('Normalized license:')
+            for s in lic["normalized"]:
+                res_list.append(f' * {s["license"]} / {s["score"]}')
+
             res = "\n".join(res_list)
         else:
-            res = "\n".join(lic['normalized'])
+            res_list = []
+            for s in lic["normalized"]:
+                res_list.append(s["license"])
+            res = ", ".join(res_list)
         return res, "\n".join(ambigs)
 
     def format_error(self, exception, verbose=False):
@@ -64,5 +69,3 @@ class TextFormatter(Formatter):
 
         else:
             return None, f'{exception}'
-
-    

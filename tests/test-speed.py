@@ -62,13 +62,13 @@ def test_speed():
     print("Long license:")
     # first long text
     res, elapsed = license_file(ll, "LICENSES/GPL-3.0-or-later.txt")
-    assert res['normalized'][0] == "GPL-3.0-only" # noqa: S101
+    assert res['normalized'][0]['license'] == "GPL-3.0-only" # noqa: S101
     print(" * first:      " + str(elapsed))
     assert elapsed < 6000 # milli seconds # noqa: S101
 
     # second long text
     res, elapsed = license_file(ll, "LICENSES/GPL-3.0-or-later.txt")
-    assert res['normalized'][0] == "GPL-3.0-only" # noqa: S101
+    assert res['normalized'][0]['license'] == "GPL-3.0-only" # noqa: S101
     print(" * second:     " + str(elapsed))
     assert elapsed < 1 # milli seconds # noqa: S101
 
