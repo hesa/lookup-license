@@ -10,11 +10,12 @@ from cachetools import cached
 import logging
 import magic
 import requests
-import sys
 import traceback
 
 from flame.license_db import FossLicenses # noqa: I900
-from flame.license_db import Validation
+from flame.license_db import Validation # noqa: I900
+
+import lookup_license.config
 
 MAX_CACHE_SIZE = 10000
 MIN_SCORE = 80
@@ -83,9 +84,6 @@ class LookupLicense():
     def __flame_status(self, res):
         return len(res['ambiguities']) == 0
 
-    def _is_text(self, buffer):
-        return "ascii" in magic.from_buffer(buffer).lower()
-
     def _fix_url(self, url):
         if "https://github.com" in url:
             url_split = url.split('/')
@@ -102,11 +100,11 @@ class LookupLicense():
             new = f'https://cgit.freedesktop.org/{proj}/plain/{rest}'
             return new
         if "https://gitlab.com/" in url:
-            new = url.replace('/-/blob/','/-/raw/')
+            new = url.replace('/-/blob/', '/-/raw/')
             return new
 
     @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
-    def lookup_license_text(self, license_text):
+    def lookup_license_text(self, license_text, minimum_score=lookup_license.config.default_minimum_score):
         # if short license text, it is probably a license name
         # try normalizing with foss-flame
         if len(license_text) < MIN_LICENSE_LENGTH:
@@ -133,7 +131,21 @@ class LookupLicense():
             unknown_licenses=False,
         )
         scan_result = [r.to_dict() for r in ret]
-        identified_licenses = [self.fl.expression_license(s['license_expression'], update_dual=False)['identified_license'] for s in scan_result]
+        identified_licenses = []
+        identified_license_names = set()
+
+        # sort lowest score first, to present the lowest score to the user
+        sorted_scan_result = sorted(scan_result, key=lambda x: x['score'], reverse=False)
+        for s in sorted_scan_result:
+            if s['score'] >= minimum_score:
+                license_name = self.fl.expression_license(s['license_expression'], update_dual=False)['identified_license']
+                if license_name not in identified_license_names:
+                    identified_license_names.add(license_name)
+                    identified_licenses.append(
+                        {
+                            "license": license_name,
+                            "score": s['score'],
+                        })
         return {
             "identification": "lookup-license",
             "provided": license_text,
@@ -147,13 +159,13 @@ class LookupLicense():
         with open(license_file) as fp:
             content = fp.read()
             return self.lookup_license_text(content)
-        
+
     @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
     def lookup_license_url(self, url):
         tried_urls = []
-        logging.debug(f'lookup_license_url({url})')
+        logging.debug(f'lookup_license_url {url}')
         self.__init_license_index()
-        response = requests.get(url, stream=True)
+        response = requests.get(url, stream=True, timeout=5)
         content = response.content
         code = response.status_code
         decoded_content = content.decode('utf-8')
@@ -164,8 +176,8 @@ class LookupLicense():
         })
         if code == 404 or not self._is_text(decoded_content):
             new_url = self._fix_url(url)
-            logging.info(f'Trying {new_url} instead of {url})')
-            response = requests.get(new_url, stream=True)
+            logging.info(f'Trying {new_url} instead of {url}')
+            response = requests.get(new_url, stream=True, timeout=5)
             code = response.status_code
             content = response.content
             decoded_content = content.decode('utf-8')
@@ -182,7 +194,7 @@ class LookupLicense():
                 "ambiguities": 0,
                 "meta": {
                     "urls": tried_urls,
-                }
+                },
             }
         logging.debug(f'looking up content: {decoded_content[:20]}')
         res = self.lookup_license_text(decoded_content)
@@ -193,7 +205,7 @@ class LookupLicense():
     def _is_text(self, buffer):
         buf_type = magic.from_buffer(buffer).lower()
         text_present = "ascii" in buf_type or "text" in buf_type
-        html_present = "html" in buf_type 
+        html_present = "html" in buf_type
         return text_present and (not html_present)
 
     def validate(self, expr):
