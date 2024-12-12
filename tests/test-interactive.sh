@@ -130,7 +130,8 @@ cat ${LOOKUP_TMP_FILE} | \
     grep -v -e ENDOFLICENSETEXT -e Welcome -e \"^$\" | \
     grep -v "^>>> Enter" | \
     grep ">>> \[" | \
-    sed 's,>>> ,,g' \
+    sed 's,>>> ,,g' | \
+    cut -d : -f 2 | cut -d , -f 1 | sed -e "s,[ ]*,,g" | awk '{printf "['%s']\n", $0}' \
         > ${ACTUAL_OUTPUT}
 #cat ${LOOKUP_TMP_FILE} | PYTHONPATH=. ./lookup_license/__main__.py  --shell | grep -v -e "ENDOFLICENSETEXT" -e Welcome -e "^$"  | sed 's,LookupLicense> ,,g' | grep "^\["  > ${ACTUAL_OUTPUT}
 
