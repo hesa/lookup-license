@@ -36,13 +36,14 @@ def test_lookup_license_text_bad():
 def test_long_lookup_license_text_good():
     data = open('tests/licenses/MIT.LICENSE').read()
     res = ll.lookup_license_text(data)
-    assert res['normalized'] == ['MIT']
+    assert res['normalized'][0]['license'] == 'MIT'
 
 def test_long_lookup_license_text_good_multiple():
     mit_data = open('tests/licenses/MIT.LICENSE').read()
     bsd3_data = open('tests/licenses/BSD-3-Clause.LICENSE').read()
     res = ll.lookup_license_text(f'{mit_data}\n{bsd3_data}')
-    assert set(res['normalized']) == set(['BSD-3-Clause', 'MIT'])
+    assert res['normalized'][0]['license'] in ['BSD-3-Clause', 'MIT']
+    assert res['normalized'][1]['license'] in ['BSD-3-Clause', 'MIT']
 
 def test_long_lookup_license_text_bad():
     bad_lic = 'something that does not look like a license...and make it long by doing times 100'*100
@@ -53,7 +54,7 @@ def test_long_lookup_license_text_bad():
 # 
 def test_lookup_license_file_good():
     res = ll.lookup_license_file('tests/licenses/MIT.LICENSE')
-    assert res['normalized'] == ['MIT']
+    assert res['normalized'][0]['license'] == 'MIT'
 
 def test_lookup_license_file_bad():
     with pytest.raises(Exception) as e_info:
@@ -65,11 +66,11 @@ def test_lookup_license_file_bad():
 # 
 def test_lookup_license_url_good():
     res = ll.lookup_license_url('https://raw.githubusercontent.com/hesa/lookup-license/main/LICENSES/GPL-3.0-or-later.txt')
-    assert res['normalized'] == ['GPL-3.0-only']
+    assert res['normalized'][0]['license'] == 'GPL-3.0-only'
 
 def test_lookup_license_url_html():
     res = ll.lookup_license_url('https://github.com/hesa/lookup-license/blob/main/LICENSES/GPL-3.0-or-later.txt')
-    assert res['normalized'] == ['GPL-3.0-only']
+    assert res['normalized'][0]['license'] == 'GPL-3.0-only'
 
 def test_lookup_license_url_bad():
     res = ll.lookup_license_url('https://github.com/hesa/lookup-license/blob/main/LICENSES/does-not-exist.txt')
