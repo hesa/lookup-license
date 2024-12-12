@@ -16,7 +16,7 @@ with open('requirements-dev.txt') as f:
     requirements_dev = f.read().splitlines()
 
 setuptools.setup(
-    name="lookup-license",
+    name="lookup_license",
     version=lookup_license_version,
     author="Henrik Sanklef",
     author_email="hesa@sandklef.com",
