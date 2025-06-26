@@ -7,4 +7,4 @@ scancode-toolkit
 foss-flame
 python-magic
 requests
-chardet
+requests[use_chardet_on_py3]
