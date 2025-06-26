@@ -6,5 +6,4 @@ cachetools
 scancode-toolkit
 foss-flame
 python-magic
-requests
-requests[use_chardet_on_py3]
+requests=2.32.0
