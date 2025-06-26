@@ -84,6 +84,13 @@ class LookupLicense():
     def __flame_status(self, res):
         return len(res['ambiguities']) == 0
 
+    def _guess_github_license_url(self, url):
+        if "github" not in url.lower():
+            return None
+        if url.startswith('github.com'):
+            url = f'https://{url}'
+        return [f'{url}/blob/main/LICENSE']
+
     def _fix_url(self, url):
         if "https://github.com" in url:
             url_split = url.split('/')
@@ -159,6 +166,15 @@ class LookupLicense():
         with open(license_file) as fp:
             content = fp.read()
             return self.lookup_license_text(content)
+
+    @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
+    def lookup_github_url(self, url):
+        github_urls = self._guess_github_license_url(url)
+        if not github_urls:
+            return None
+        for github_url in github_urls:
+            res = self.lookup_license_url(github_url)
+        return res
 
     @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
     def lookup_license_url(self, url):

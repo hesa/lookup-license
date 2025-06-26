@@ -78,6 +78,18 @@ class LookupLicenseShell(cmd.Cmd):
         except Exception as e:
             self.__handle_error(e)
 
+    def do_github(self, arg):
+        """Provide a GitHub repository URL for license lookup. After issuing "github", write the GitHub repository URL to input (stdin) and press enter."""
+        if not self.license_reader:
+            self.license_reader = LicenseTextReader()
+        url = self.license_reader.read_license_url()
+        self.verbose(f'Read {url}, looking up the license')
+        try:
+            result = ll.lookup_github_url(url)
+            self.__output_result(result)
+        except Exception as e:
+            self.__handle_error(e)
+
     def do_verbose(self, arg):
         """Make the interaction more verbose."""
         self.verbose_mode = True

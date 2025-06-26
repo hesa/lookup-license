@@ -39,6 +39,10 @@ class TextFormatter(Formatter):
 
     def format_license(self, lic, verbose=False):
         ambigs = []
+
+        if not lic:
+            return None, f'Invalid license {lic}'
+
         if lic['ambiguities'] != 0:
             ambigs = [a['description'] for a in lic['meta']['ambiguities']]
         if verbose:
