@@ -4,8 +4,11 @@
 
 import setuptools
 from lookup_license.config import lookup_license_version
+from lookup_license.config import DESCRIPTION
 
-_long_description = "Identifies licenses from licenses texts"
+with open("README.md") as f:
+    _long_description = f.read()
+
 
 requirements = []
 with open('requirements.txt') as f:
@@ -20,7 +23,7 @@ setuptools.setup(
     version=lookup_license_version,
     author="Henrik Sanklef",
     author_email="hesa@sandklef.com",
-    description="",
+    description=DESCRIPTION,
     long_description=_long_description,
     long_description_content_type="text/markdown",
     license_files=('LICENSES/GPL-3.0-or-later.txt',),
