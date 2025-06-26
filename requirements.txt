@@ -6,4 +6,4 @@ cachetools
 scancode-toolkit
 foss-flame
 python-magic
-requests
+requests==2.32.0

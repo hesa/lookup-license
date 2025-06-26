@@ -43,6 +43,11 @@ def get_parser():
                         help='read license from url',
                         default=False)
 
+    parser.add_argument('-gh', '--github',
+                        action='store_true',
+                        help='try to read license from github repo url',
+                        default=False)
+
     parser.add_argument('-s', '--shell',
                         action='store_true',
                         help='interactive shell',
@@ -78,6 +83,10 @@ def license_url(ll, url):
     result = ll.lookup_license_url(url)
     return result
 
+def github_url(ll, url):
+    result = ll.lookup_github_url(url)
+    return result
+
 def license_text(ll, texts, minimum_score):
     result = ll.lookup_license_text(" ".join(texts), minimum_score)
     return result
@@ -104,6 +113,7 @@ def main():
         elif args.shell:
             return interactive_shell(ll)
         else:
+            err = None
             if args.input == []:
                 lt_reader = LicenseTextReader()
                 if args.file:
@@ -118,18 +128,25 @@ def main():
             elif args.input:
                 if args.file:
                     result = license_file(ll, args.input[0])
+                elif args.github:
+                    result = github_url(ll, args.input[0])
+                    if not result['normalized']:
+                        err = f'Could not get license information from github url "{args.input[0]}".'
+                        out = ''
                 elif args.url:
                     result = license_url(ll, args.input[0])
                 else:
                     result = license_text(ll, args.input, float(args.minimum_score))
 
-            formatter = FormatterFactory.formatter("text")
-            try:
-                validate(ll, args, result)
-                out, err = formatter.format_license(result, args.verbose)
-            except Exception as e:
-                out = ""
-                out, err = formatter.format_error(e, args.verbose)
+            if not err:
+                formatter = FormatterFactory.formatter("text")
+                try:
+                    validate(ll, args, result)
+                    out, err = formatter.format_license(result, args.verbose)
+                except Exception as e:
+                    out = ""
+                    out, err = formatter.format_error(e, args.verbose)
+
             if err:
                 print("error: " + err, file=sys.stderr)
             if out:
