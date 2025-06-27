@@ -21,6 +21,10 @@ MAX_CACHE_SIZE = 10000
 MIN_SCORE = 80
 MIN_LICENSE_LENGTH = 200
 
+MAIN_BRANCHES = ['main', 'master' ]
+LICENSE_FILES = ['LICENSE', 'LICENSE.txt', 'COPYING']
+
+
 class LicenseCache(LFUCache):
 
     def popitem(self):
@@ -84,12 +88,40 @@ class LookupLicense():
     def __flame_status(self, res):
         return len(res['ambiguities']) == 0
 
+    def __fix_protocol(self, url):
+        if not url.startswith('http'):
+            url = f'https://{url}'
+        return url
+    
     def _guess_github_license_url(self, url):
+        url = self.__fix_protocol(url)
+
+        github_urls = []
+        for branch in MAIN_BRANCHES:
+            for license_file in LICENSE_FILES:
+                github_urls.append(f'{url}/blob/{branch}/{license_file}')
+        return github_urls
+
+    def _guess_gitlab_license_url(self, url):
+        url = self.__fix_protocol(url)
+
+        github_urls = []
+        for branch in MAIN_BRANCHES:
+            for license_file in LICENSE_FILES:
+                github_urls.append(f'{url}/-/blob/{branch}/{license_file}')
+        return github_urls
+
+    def _guess_repo_license_url(self, url):
         if "github" not in url.lower():
             return None
-        if url.startswith('github.com'):
-            url = f'https://{url}'
-        return [f'{url}/blob/main/LICENSE']
+
+        url = self.__fix_protocol(url)
+
+        github_urls = []
+        for branch in MAIN_BRANCHES:
+            for license_file in LICENSE_FILES:
+                github_urls.append(f'{url}/blob/{branch}/{license_file}')
+        return github_urls
 
     def _fix_url(self, url):
         if "https://github.com" in url:
@@ -168,19 +200,45 @@ class LookupLicense():
             return self.lookup_license_text(content)
 
     @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
+    def lookup_gitrepo_url(self, url):
+        if 'github.com' in url:
+            return self.lookup_github_url(url)
+        if 'gitlab.com' in url:
+            return self.lookup_gitlab_url(url)
+
+    def __lookup_gitrepo_url(self, url, urls):
+        guesses = []
+        identified_licenses = set()
+        
+        for url in urls:
+            res = self.lookup_license_url(url)
+            if res['normalized']:
+                for res_object in res['normalized']:
+                    lic = res_object['license']
+                    identified_licenses.add(lic)
+            guesses.append(res)
+
+        return {
+            'url': url,
+            'identified_licenses': list(identified_licenses),
+            'details': guesses,
+        }
+        
+    @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
     def lookup_github_url(self, url):
-        github_urls = self._guess_github_license_url(url)
-        if not github_urls:
-            return None
-        for github_url in github_urls:
-            res = self.lookup_license_url(github_url)
-        return res
+        return self.__lookup_gitrepo_url(url, self._guess_github_license_url(url))
+
+    @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
+    def lookup_gitlab_url(self, url):
+        return self.__lookup_gitrepo_url(url, self._guess_gitlab_license_url(url))
+
 
     @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
     def lookup_license_url(self, url):
         tried_urls = []
         logging.debug(f'lookup_license_url {url}')
         self.__init_license_index()
+        logging.debug(f'retrieving {url}')
         response = requests.get(url, stream=True, timeout=5)
         content = response.content
         code = response.status_code
