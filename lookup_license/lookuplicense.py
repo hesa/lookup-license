@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 from licensedcode import cache # noqa: I900
+from packageurl import PackageURL
 from cachetools import LFUCache
 from cachetools import cached
 import logging
@@ -12,10 +13,12 @@ import magic
 import requests
 import traceback
 
+
 from flame.license_db import FossLicenses # noqa: I900
 from flame.license_db import Validation # noqa: I900
 
 import lookup_license.config
+from lookup_license.gitrepo import GitRepo
 
 MAX_CACHE_SIZE = 10000
 MIN_SCORE = 80
@@ -77,6 +80,7 @@ class LookupLicense():
         logging.debug("Creating LicenseLookup object")
         self.idx = None
         self.fl = FossLicenses()
+        self.gitrepo = GitRepo()
         self.license_reader = None
 
     def __init_license_index(self):
@@ -92,24 +96,33 @@ class LookupLicense():
         if not url.startswith('http'):
             url = f'https://{url}'
         return url
-    
+
     def _guess_github_license_url(self, url):
         url = self.__fix_protocol(url)
 
-        github_urls = []
+        urls = []
         for branch in MAIN_BRANCHES:
             for license_file in LICENSE_FILES:
-                github_urls.append(f'{url}/blob/{branch}/{license_file}')
-        return github_urls
+                urls.append(f'{url}/blob/{branch}/{license_file}')
+        return urls
 
     def _guess_gitlab_license_url(self, url):
         url = self.__fix_protocol(url)
 
-        github_urls = []
+        urls = []
         for branch in MAIN_BRANCHES:
             for license_file in LICENSE_FILES:
-                github_urls.append(f'{url}/-/blob/{branch}/{license_file}')
-        return github_urls
+                urls.append(f'{url}/-/blob/{branch}/{license_file}')
+        return urls
+
+    def _guess_codeberg_license_url(self, url):
+        url = self.__fix_protocol(url)
+
+        urls = []
+        for branch in MAIN_BRANCHES:
+            for license_file in LICENSE_FILES:
+                urls.append(f'{url}/src/branch/{branch}/{license_file}')
+        return urls
 
     def _guess_repo_license_url(self, url):
         if "github" not in url.lower():
@@ -124,22 +137,25 @@ class LookupLicense():
         return github_urls
 
     def _fix_url(self, url):
-        if "https://github.com" in url:
+        if "github" in url:
             url_split = url.split('/')
             org = url_split[3]
             proj = url_split[4]
             rest = "/".join([x for x in url_split[5:] if x != 'blob'])
             new = f'https://raw.githubusercontent.com/{org}/{proj}/{rest}'
-            logging.info(f' fixed license url: {url}  --->   {new}')
+            logging.debug(f' fixed license url: {url}  --->   {new}')
             return new
-        if "https://cgit.freedesktop.org" in url:
+        if "cgit.freedesktop.org" in url:
             url_split = url.split('/')
             proj = url_split[3]
             rest = "/".join([x for x in url_split[4:] if x != 'tree'])
             new = f'https://cgit.freedesktop.org/{proj}/plain/{rest}'
             return new
-        if "https://gitlab.com/" in url:
+        if "gitlab/" in url:
             new = url.replace('/-/blob/', '/-/raw/')
+            return new
+        if "codeberg" in url:
+            new = url.replace('/src/', '/raw/')
             return new
 
     @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
@@ -200,18 +216,62 @@ class LookupLicense():
             return self.lookup_license_text(content)
 
     @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
-    def lookup_gitrepo_url(self, url):
-        if 'github.com' in url:
-            return self.lookup_github_url(url)
-        if 'gitlab.com' in url:
-            return self.lookup_gitlab_url(url)
+    def lookup_gitrepo_url_shallow(self, url):
+        branched_suggestions = self.gitrepo.suggest_license_files(url)
+        print("suggestions .... ")
+        for suggestions in branched_suggestions:
+            print("lo...")
+            res = self.__lookup_gitrepo_url(url, suggestions)
+
+            print("RES ..... " + str(res))
+            if not res:
+                continue
+            
+            # if a license has been identified,
+            # assume this is the branch to use (details can be found in res)
+            if res['identified_licenses']:
+                return res
+
+        # if no license found, return None (even if implicit)
+        return None 
+
+    @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
+    def lookup_purl_shallow(self, purl):
+        purl_object = PackageURL.from_string(purl).to_dict()
+        purl_type = purl_object['type']
+        print("1")
+        _map = {
+            'github': self._guess_purl_github
+        }
+
+        urls = self._guess_purl_github(purl, purl_object)
+        return self.__lookup_gitrepo_url(purl, urls)
+
+    def _guess_purl_github(self, purl, purl_object):
+        type = purl_object['type']
+        namespace = purl_object['namespace']
+        name = purl_object['name']
+        version = purl_object['version']
+
+        urls = []
+        for tag in ['refs/tags']:
+            for license_file in LICENSE_FILES:
+                gh_url = f'https://raw.githubusercontent.com/{namespace}/{name}/{tag}/{version}/{license_file}'
+                urls.append(gh_url)
+        return urls
 
     def __lookup_gitrepo_url(self, url, urls):
         guesses = []
         identified_licenses = set()
-        
-        for url in urls:
-            res = self.lookup_license_url(url)
+        for _url in urls:
+            print("_url: " + _url)
+            try:
+                res = self.lookup_license_url(_url)
+            except Exception as e:
+                print("eeeeeee")
+                print("eeeeeee " + str(e))
+            print("res")
+            print("res: " + str(res))
             if res['normalized']:
                 for res_object in res['normalized']:
                     lic = res_object['license']
@@ -225,21 +285,16 @@ class LookupLicense():
         }
         
     @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
-    def lookup_github_url(self, url):
-        return self.__lookup_gitrepo_url(url, self._guess_github_license_url(url))
-
-    @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
-    def lookup_gitlab_url(self, url):
-        return self.__lookup_gitrepo_url(url, self._guess_gitlab_license_url(url))
-
-
-    @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
     def lookup_license_url(self, url):
         tried_urls = []
         logging.debug(f'lookup_license_url {url}')
+        logging.info(f'lookup_license_url {url}')
         self.__init_license_index()
         logging.debug(f'retrieving {url}')
         response = requests.get(url, stream=True, timeout=5)
+        print("response...")
+        print("response... r" + str(response))
+        print("response... s" + str(response.status_code))
         content = response.content
         code = response.status_code
         decoded_content = content.decode('utf-8')
@@ -248,18 +303,20 @@ class LookupLicense():
             "status_code": code,
             "content": decoded_content,
         })
-        if code == 404 or not self._is_text(decoded_content):
-            new_url = self._fix_url(url)
-            logging.info(f'Trying {new_url} instead of {url}')
-            response = requests.get(new_url, stream=True, timeout=5)
-            code = response.status_code
-            content = response.content
-            decoded_content = content.decode('utf-8')
-            tried_urls.append({
-                "url": new_url,
-                "status_code": code,
-                "content": decoded_content,
-            })
+        # TODO: REMOVE BELOW
+        if 1 == 2:
+            if code == 404 or not self._is_text(decoded_content):
+                new_url = self._fix_url(url)
+                logging.debug(f'Trying {new_url} instead of {url}')
+                response = requests.get(new_url, stream=True, timeout=5)
+                code = response.status_code
+                content = response.content
+                decoded_content = content.decode('utf-8')
+                tried_urls.append({
+                    "url": new_url,
+                    "status_code": code,
+                    "content": decoded_content,
+                })
         if code == 404 or not self._is_text(decoded_content):
             return {
                 "identification": "lookup-license",
