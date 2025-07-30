@@ -11,11 +11,12 @@ check-reuse: clean
 
 python: py-test py-lint
 
-py-test:
-#PYTHONPATH=python/ python3 -m pytest --log-cli-level=10 tests/
-        PYTHONPATH=. tests/test-interactive.sh 1
-        PYTHONPATH=. pytest tests/test-lookup.py
-        PYTHONPATH=. pytest tests/test-speed.py
+py-test: 
+	PYTHONPATH=. tests/test-interactive.sh 1
+	PYTHONPATH=. pytest tests/test-lookup.py
+	PYTHONPATH=. pytest tests/test-speed.py
+	PYTHONPATH=. pytest tests/test_gitrepo.py	
+	@echo python tests passed
 
 py-lint:
 	flake8
