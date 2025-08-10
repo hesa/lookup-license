@@ -2,6 +2,17 @@
 
 DEBUG=True
 
+PYPI_PACKAGES=("pkg:pypi/boto3@1.35.99;Apache-2.0 AND License :: OSI Approved :: Apache Software License"
+               "pkg:pypi/click@8.1.8;BSD-3-Clause AND License :: OSI Approved :: BSD License"
+              )
+SWIFT_PACKAGES=("pkg:swift/github.com/google/abseil-cpp-binary@1.2024011602.0;Apache-2.0"
+                "pkg:swift/github.com/firebase/leveldb@1.22.5;BSD-3-Clause AND generic-cla"
+              )
+GEM_PACKAGES=("pkg:gem/google-apis-core@0.11.1;Apache-2.0"
+              "pkg:gem/google-cloud-env@1.6.0;Apache-2.0"
+              "pkg:gem/aws-sdk-s3@1.135.0;Apache-2.0"
+              )
+
 verbose()
 {
     echo "$*" 1>&2
@@ -18,6 +29,7 @@ debug()
 exec_ll()
 {
     ./devel/lookup-license $*
+#echo    ./devel/lookup-license $* >> /tmp/cli.txt
 }
 
 compare_exit()
@@ -32,44 +44,152 @@ compare_exit()
     fi
 
     verbose "ERROR"
+    verbose ""
     verbose " * arguments: $ARGS"
     verbose " * actual:    $ACTUAL"
     verbose " * expected:  $EXPECTED"
-    
+    exit 1
 }
 
-git_repo_license_sub()
+git_license_sub()
 {
     local URL="$1"
     local EXPECTED_LICENSE="$2"
+    local ARGS="$3"
 
     printf " * %-75s" "$URL: "
-    LICENSE=$(exec_ll --gitrepo "$URL" 2>/dev/null | tail -1)
-    
-    compare_exit "$LICENSE"  "$EXPECTED_LICENSE" "$URL"
+    LICENSE="$(exec_ll $ARGS "$URL" 2>/dev/null | tail -1)"
+    SIMPLIFIED="$(flame simplify "$LICENSE")"
+    compare_exit "$SIMPLIFIED"  "$EXPECTED_LICENSE" "$URL"
     echo OK
 }
 
 
-git_repo_license()
+url_license_multi()
 {
     local URL="$1"
     local EXPECTED_LICENSE="$2"
+    local ARGS="$3"
 
     for post in "" "/"
     do
         for pre in "" "https://"
         do
-            git_repo_license_sub "${pre}${URL}${post}" "$EXPECTED_LICENSE"
+            git_license_sub "${pre}${URL}${post}" "$EXPECTED_LICENSE" "$ARGS"
         done
     done
+}
+
+url_license()
+{
+    local URL="$1"
+    local EXPECTED_LICENSE="$2"
+    local ARGS="$3"
+
+    git_license_sub "${URL}" "$EXPECTED_LICENSE" "$ARGS"
 }
 
 test_git_repo_licenses()
 {
     echo "Check git repositories"
-    git_repo_license "github.com/webfactory/ssh-agent/tree/v0.8.0" "MIT"
-    git_repo_license "github.com/webfactory/ssh-agent"             "MIT"
+
+    # github
+    url_license_multi "github.com/webfactory/ssh-agent/tree/v0.8.0" "MIT" " --gitrepo "
+    url_license_multi "github.com/webfactory/ssh-agent"             "MIT" " --gitrepo "
+    echo
 }
 
+test_purl_swift_licenses()
+{
+    echo "Check Purls - Swift"
+
+    # purl / pypi
+    for i in ${!SWIFT_PACKAGES[@]}
+    do
+        swift_value=${SWIFT_PACKAGES[$i]}
+        local URL="$(echo $swift_value | cut -d ";" -f 1)"
+        local LIC="$(echo $swift_value | cut -d ";" -f 2)"
+        url_license "$URL"    "$LIC" " --purl "
+    done
+
+    echo
+}
+
+
+test_purl_gem_licenses()
+{
+    echo "Check Purls - Gem"
+
+    # purl / pypi
+    for i in ${!GEM_PACKAGES[@]}
+    do
+        gem_value=${GEM_PACKAGES[$i]}
+        local URL="$(echo $gem_value | cut -d ";" -f 1)"
+        local LIC="$(echo $gem_value | cut -d ";" -f 2)"
+        url_license "$URL"    "$LIC" " --purl "
+    done
+
+    echo
+}
+
+
+test_purl_pypi_licenses()
+{
+    echo "Check Purls - Pypi"
+
+    # purl / pypi
+    for i in ${!PYPI_PACKAGES[@]}
+    do
+        pypi_value=${PYPI_PACKAGES[$i]}
+        local URL="$(echo $pypi_value | cut -d ";" -f 1)"
+        local LIC="$(echo $pypi_value | cut -d ";" -f 2)"
+        url_license "$URL"    "$LIC" " --purl "
+    done
+
+ #   "pkg:pypi/click@8.1.8" "BSD-3-Clause" " --purl "
+    echo
+}
+
+test_pypi_licenses()
+{
+    echo "Check Pypi"
+
+    # purl / pypi
+    for i in ${!PYPI_PACKAGES[@]}
+    do
+        pypi_value=${PYPI_PACKAGES[$i]}
+        local URL="$(echo $pypi_value | cut -d ";" -f 1)"
+        local LIC="$(echo $pypi_value | cut -d ";" -f 2)"
+        url_license "$URL"    "$LIC" " --pypi "
+    done
+
+ #   "pkg:pypi/click@8.1.8" "BSD-3-Clause" " --purl "
+    echo
+}
+
+
+test_purl_licenses()
+{
+    #test_purl_swift_licenses
+    test_purl_pypi_licenses
+}
+
+test_license_url()
+{
+    local URL="$1"
+    local EXP="$2"
+    local LICENSE=$(exec_ll --url $URL)
+    compare_exit "$LICENSE" "$EXP" "$URL"
+}
+    
+test_license_urls()
+{
+    test_license_url 'https://github.com/postmodern/digest-crc/blob/main/LICENSE.txt' "MIT"
+}
+
+test_license_urls
 test_git_repo_licenses
+test_purl_licenses
+test_pypi_licenses
+test_purl_swift_licenses
+test_purl_gem_licenses
