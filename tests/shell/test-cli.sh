@@ -12,6 +12,13 @@ GEM_PACKAGES=("pkg:gem/google-apis-core@0.11.1;Apache-2.0"
               "pkg:gem/google-cloud-env@1.6.0;Apache-2.0"
               "pkg:gem/aws-sdk-s3@1.135.0;Apache-2.0"
               )
+URLS=("https://github.com/postmodern/digest-crc/blob/main/LICENSE.txt;MIT"
+      "https://raw.githubusercontent.com/postmodern/digest-crc/main/LICENSE.txt;MIT"
+     )
+
+URLS_TEXT=("https://raw.githubusercontent.com/postmodern/digest-crc/main/LICENSE.txt;MIT"
+     )
+
 
 verbose()
 {
@@ -184,10 +191,41 @@ test_license_url()
     
 test_license_urls()
 {
-    test_license_url 'https://github.com/postmodern/digest-crc/blob/main/LICENSE.txt' "MIT"
+    echo "Check Url"
+
+    # url
+    for i in ${!URLS[@]}
+    do
+        url_value=${URLS[$i]}
+        local URL="$(echo $url_value | cut -d ";" -f 1)"
+        local LIC="$(echo $url_value | cut -d ";" -f 2)"
+        url_license "$URL"    "$LIC" " --url "
+    done
+    echo
+}
+
+test_license_texts()
+{
+    echo "Check text from Url"
+
+    # url
+    for i in ${!URLS_TEXT[@]}
+    do
+        url_value=${URLS_TEXT[$i]}
+        local URL="$(echo $url_value | cut -d ";" -f 1)"
+        local LIC="$(echo $url_value | cut -d ";" -f 2)"
+        printf " * %-75s" "text from $URL: "
+        LICENSE_TEXT="$(curl -s -LJ "$URL")"
+        ACTUAL=$(echo "$LICENSE_TEXT" | exec_ll "$URL"    "$LICENSE_TEXT" "")
+        
+        compare_exit "$ACTUAL" "$LIC" ""
+        echo OK
+    done
+    echo
 }
 
 test_license_urls
+test_license_texts
 test_git_repo_licenses
 test_purl_licenses
 test_pypi_licenses
