@@ -10,7 +10,7 @@ import pytest
 #from lookup_license.lookuplicense import LookupLicense
 #ll = LookupLicense()
 
-from lookup_license.gitrepo import GitRepo
+from lookup_license.lookupurl.gitrepo import GitRepo
 gitrepo = GitRepo()
 
 def test_repos():
