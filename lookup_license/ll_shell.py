@@ -99,16 +99,13 @@ class LookupLicenseShell(cmd.Cmd):
         self.verbose_mode = False
 
     def __output_result(self, result):
-        if self.verbose_mode:
-            if not self.formatter:
-                self.formatter = FormatterFactory.formatter("text")
-            out, err = self.formatter.format_license(result)
-            if err:
-                print("error" + err, file=sys.stderr)
+        if not self.formatter:
+            self.formatter = FormatterFactory.formatter("text")
+        out, err = self.formatter.format_license(result, verbose=self.verbose_mode)
+        if err:
+            print("error" + err, file=sys.stderr)
+        if out:
             print(out)
-        else:
-            print(str(result['normalized']))
-
 
 if __name__ == '__main__':
     LookupLicenseShell().cmdloop()
