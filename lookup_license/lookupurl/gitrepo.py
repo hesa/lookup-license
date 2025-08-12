@@ -9,7 +9,7 @@ class GitRepo(LookupURL):
     def __init__(self):
         
         self.MAIN_BRANCHES = ['main', 'master', 'develop' ]
-        self.LICENSE_FILES = ['LICENSE', 'LICENSE.txt', 'LICENSE.md', 'COPYING', 'COPYING.txt']
+        self.LICENSE_FILES = ['LICENSE', 'LICENSE.txt', 'LICENSE.md', 'license.md', 'COPYING', 'COPYING.txt', 'README.md', 'LICENSE-MIT', 'MIT-LICENSE', ]
         logging.debug("GitRepo()")
         super().__init__()
 
@@ -17,6 +17,7 @@ class GitRepo(LookupURL):
         return self.suggest_license_files(url)
 
     def raw_content_url(self, url):
+        print("RAW URL " + str(url))
         url = self.__fix_url(url)
         
 # TODO: reintroduce, but simplify is_repo        
@@ -25,7 +26,10 @@ class GitRepo(LookupURL):
         
         if 'github' in url:
             url = url.replace("github.com", "raw.githubusercontent.com")
-            url = url.replace('/tree/', '/refs/tags/')
+            if '/tree/main/' in url:
+                url = url.replace('/tree/main/', '/refs/heads/main/')
+            else:
+                url = url.replace('/tree/', '/refs/tags/')                
             url = url.replace('/blob/', '/')
             return url
 
@@ -113,7 +117,7 @@ class GitRepo(LookupURL):
         print("2 is_repo EXECEPTION " + str(slashes), file=sys.stderr)
         raise Exception(f'Cannot determine if {repo_url} is a repo or file (having {slashes} slashes after stripping possible last / ')
 
-    def _suggest_license_files(self, repo_url, branch=None):
+    def _suggest_license_files(self, repo_url, url_source, branch=None):
         file_suggestions = []
 
         
@@ -138,30 +142,37 @@ class GitRepo(LookupURL):
                 return []
             
             raw_license_url = self.raw_content_url(license_url)
-            file_suggestions.append(raw_license_url)
+            file_suggestions.append({
+                'license_raw_url': raw_license_url,
+                'original_url': repo_url
+            })
 
             # Some git repos add "v" in front of the version
             # e.g "v0.1.0" but the release is called "0.0.0"
             # Add a 'v' in case
             if '/refs/tags/' in raw_license_url:
                 raw_license_url = raw_license_url.replace('/refs/tags/', '/refs/tags/v')
-                file_suggestions.append(raw_license_url)
+                file_suggestions.append({
+                    'license_raw_url': raw_license_url,
+                    'original_url': repo_url,
+                    'source': url_source
+            })
         
         return file_suggestions
     
-    def suggest_license_files(self, repo_url, branches=None):
+    def suggest_license_files(self, repo_url, url_source='url', branches=None):
 #        if not self.is_repo(repo_url):
 #            raise Exception(f'"{repo_url}" is not a repository url')
         has_branch = self.has_branch(repo_url)
 
         suggestions = []
         if has_branch:
-            suggestions.append(self._suggest_license_files(repo_url))
+            suggestions.append(self._suggest_license_files(repo_url, url_source))
         else:
             if not branches:
                 branches  = self.MAIN_BRANCHES
             for branch in branches:
-                suggestions.append(self._suggest_license_files(repo_url, branch))
+                suggestions.append(self._suggest_license_files(repo_url, url_source, branch))
         return suggestions
 
     def lookup_url(self, url):
@@ -179,4 +190,29 @@ class GitRepo(LookupURL):
             git_url = url
             
         suggestions = self.suggest_urls(git_url)
-        return self.lookup_license_urls(url, suggestions)
+        ret = self.lookup_license_urls(url, suggestions)
+        return ret
+
+    def empty_data(self):
+        return {
+            'provided': '',
+            'details': {
+                'suggestions': [],
+                'failed_urls': [],
+                'successful_urls': []
+            },
+            'identified_license': None,
+            'success': False
+        }
+
+    def gitrepo_with_version(self, url, version):
+        if not url:
+            return None
+        if 'github.com' in url:
+            return f'{url}/tree/{version}'
+
+    def gitrepo_zip_file(self, url, version):
+        if not url:
+            return None
+        if 'github.com' in url:
+            return f'{url}/archive/refs/tags/{version}.zip'

@@ -37,7 +37,7 @@ class Purl(LookupURL):
         """
         purl_data = PackageURL.from_string(purl)
         purl_type = purl_data.type
-#        purl_namespace = purl_data.namespace
+        purl_namespace = purl_data.namespace
         name = purl_data.name
         version = purl_data.version
         qualifiers = purl_data.qualifiers
@@ -45,13 +45,13 @@ class Purl(LookupURL):
         if not name:
             return
 
-        if not namespace:
+        if not purl_namespace:
             logging.debug("NAME SPACE MISSING")
 
-        if purl_object.type == 'swift':
+        if purl_data.type == 'swift':
             repo_url = f"https://{namespace}/{name}"            
         else:
-            repo_url = f"https://github.com/{namespace}/{name}"
+            repo_url = f"https://github.com/{purl_namespace}/{name}"
 
         if version:
             url_parts = repo_url.split('/')
