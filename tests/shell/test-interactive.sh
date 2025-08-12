@@ -52,7 +52,8 @@ format_license_file()
 #
 expected_license()
 {
-    echo "['${1}']"
+#    echo "['${1}']"
+    echo "${1}"
 }
 
 #
@@ -124,15 +125,16 @@ err "Finished creating $CNT commands in $ELAPSED seconds"
 # pipe commands through shell and strip information for later check (diff)
 START=$(date "+%s%N")
 
-
 cat ${LOOKUP_TMP_FILE} | \
     PYTHONPATH=. ./lookup_license/__main__.py  --shell | \
     grep -v -e ENDOFLICENSETEXT -e Welcome -e \"^$\" | \
     grep -v "^>>> Enter" | \
-    grep ">>> \[" | \
+    grep ">>> " | \
     sed 's,>>> ,,g' | \
-    cut -d : -f 2 | cut -d , -f 1 | sed -e "s,[ ]*,,g" | awk '{printf "['%s']\n", $0}' \
-        > ${ACTUAL_OUTPUT}
+    grep -v "^[ ]*$" \
+    > ${ACTUAL_OUTPUT}
+
+#    cut -d : -f 2 | cut -d , -f 1 | sed -e "s,[ ]*,,g" | awk '{printf "['%s']\n", $0}' \
 #cat ${LOOKUP_TMP_FILE} | PYTHONPATH=. ./lookup_license/__main__.py  --shell | grep -v -e "ENDOFLICENSETEXT" -e Welcome -e "^$"  | sed 's,LookupLicense> ,,g' | grep "^\["  > ${ACTUAL_OUTPUT}
 
 
