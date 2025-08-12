@@ -7,9 +7,9 @@ import logging
 class GitRepo(LookupURL):
 
     def __init__(self):
-        
-        self.MAIN_BRANCHES = ['main', 'master', 'develop' ]
-        self.LICENSE_FILES = ['LICENSE', 'LICENSE.txt', 'LICENSE.md', 'license.md', 'COPYING', 'COPYING.txt', 'README.md', 'LICENSE-MIT', 'MIT-LICENSE', ]
+
+        self.MAIN_BRANCHES = ['main', 'master', 'develop']
+        self.LICENSE_FILES = ['LICENSE', 'LICENSE.txt', 'LICENSE.md', 'license.md', 'COPYING', 'COPYING.txt', 'README.md', 'LICENSE-MIT', 'MIT-LICENSE']
         logging.debug("GitRepo()")
         super().__init__()
 
@@ -19,17 +19,15 @@ class GitRepo(LookupURL):
     def raw_content_url(self, url):
         print("RAW URL " + str(url))
         url = self.__fix_url(url)
-        
-# TODO: reintroduce, but simplify is_repo        
-#        if self.is_repo(url):
-#            raise Exception(f'Raw url to a repository ({repo_url}) not supported')
-        
+
+# TODO: reintroduce, but simplify is_repo # noqa: T101
+
         if 'github' in url:
             url = url.replace("github.com", "raw.githubusercontent.com")
             if '/tree/main/' in url:
                 url = url.replace('/tree/main/', '/refs/heads/main/')
             else:
-                url = url.replace('/tree/', '/refs/tags/')                
+                url = url.replace('/tree/', '/refs/tags/')
             url = url.replace('/blob/', '/')
             return url
 
@@ -47,12 +45,11 @@ class GitRepo(LookupURL):
 
     def has_branch(self, repo_url):
         if 'github' in repo_url:
-            return ( '/blob/' in repo_url or '/tree/' in repo_url)
+            return ('/blob/' in repo_url or '/tree/' in repo_url)
         if 'freedesktop' in repo_url:
             return ('/tree/' in repo_url and '?' in repo_url)
         if 'gitlab' in repo_url:
             return '/tree/' in repo_url
-        #raise Exception(f'Repo {repo_url} not supported')
         return None
 
     def OBSOLETE_is_file(self, repo_url):
@@ -78,9 +75,9 @@ class GitRepo(LookupURL):
         if slashes == 6:
             print("2 is_repo 6", file=sys.stderr)
             if 'gitlab' in repo_url:
-                if not '?' in repo_url:
+                if '?' not in repo_url:
                     raise Exception(f'"{repo_url}" is a repo or file (having {slashes} slashes after stripping possible last / ')
-                    
+
                 return False
             if 'github' in repo_url and 'tree' in repo_url:
                 return True
@@ -120,7 +117,6 @@ class GitRepo(LookupURL):
     def _suggest_license_files(self, repo_url, url_source, branch=None):
         file_suggestions = []
 
-        
         for license_file in self.LICENSE_FILES:
             license_url = None
 
@@ -136,15 +132,14 @@ class GitRepo(LookupURL):
 
                 if 'freedesktop' in repo_url:
                     license_url = self.__fix_url(f'{repo_url}/{license_file}?{branch}')
-                    
+
             if not license_url:
-                #raise Exception(f'Guessing license file for {repo_url} is not implemented')
                 return []
-            
+
             raw_license_url = self.raw_content_url(license_url)
             file_suggestions.append({
                 'license_raw_url': raw_license_url,
-                'original_url': repo_url
+                'original_url': repo_url,
             })
 
             # Some git repos add "v" in front of the version
@@ -155,14 +150,12 @@ class GitRepo(LookupURL):
                 file_suggestions.append({
                     'license_raw_url': raw_license_url,
                     'original_url': repo_url,
-                    'source': url_source
-            })
-        
+                    'source': url_source,
+                })
+
         return file_suggestions
-    
+
     def suggest_license_files(self, repo_url, url_source='url', branches=None):
-#        if not self.is_repo(repo_url):
-#            raise Exception(f'"{repo_url}" is not a repository url')
         has_branch = self.has_branch(repo_url)
 
         suggestions = []
@@ -170,14 +163,14 @@ class GitRepo(LookupURL):
             suggestions.append(self._suggest_license_files(repo_url, url_source))
         else:
             if not branches:
-                branches  = self.MAIN_BRANCHES
+                branches = self.MAIN_BRANCHES
             for branch in branches:
                 suggestions.append(self._suggest_license_files(repo_url, url_source, branch))
         return suggestions
 
     def lookup_url(self, url):
         if url.startswith('pkg:'):
-            # purl 
+            # purl
             purl_object = PackageURL.from_string(url)
             if purl_object.version:
                 git_url = f'https://github.com/{purl_object.namespace}/{purl_object.name}/tree/{purl_object.version}'
@@ -188,7 +181,7 @@ class GitRepo(LookupURL):
             git_url = url
         else:
             git_url = url
-            
+
         suggestions = self.suggest_urls(git_url)
         ret = self.lookup_license_urls(url, suggestions)
         return ret
@@ -199,10 +192,10 @@ class GitRepo(LookupURL):
             'details': {
                 'suggestions': [],
                 'failed_urls': [],
-                'successful_urls': []
+                'successful_urls': [],
             },
             'identified_license': None,
-            'success': False
+            'success': False,
         }
 
     def gitrepo_with_version(self, url, version):
