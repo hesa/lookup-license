@@ -1,4 +1,3 @@
-from lookup_license.lookupurl.lookupurl import LookupURL
 from lookup_license.lookupurl.gitrepo import GitRepo
 from lookup_license.lookupurl.gem import Gem
 from lookup_license.lookupurl.purl import Purl
@@ -11,7 +10,7 @@ def _contains(url, strings):
     return res
 
 class LookupURLFactory:
-    
+
     @staticmethod
     def lookupurl(url_type):
         _lookup_map = {
@@ -23,5 +22,5 @@ class LookupURLFactory:
             'gem': Gem,
         }
         lookup_obj = _lookup_map[url_type]()
-        
+
         return lookup_obj

@@ -18,7 +18,7 @@ class Gem(LookupURL):
         logging.debug("Gem()")
         self.gitrepo = GitRepo()
         super().__init__()
-    
+
     def _try_gem_config_url(self, gem_url):
         retriever = Retriever()
         retrieved_result = retriever.download_url(gem_url)
@@ -26,24 +26,21 @@ class Gem(LookupURL):
         if not success:
             return None
         decoded_content = retrieved_result['decoded_content']
-        try:
-            json_data = json.loads(decoded_content)
-        except:
-            return None
+        json_data = json.loads(decoded_content)
 
         licenses_from_config = []
         #
         # Handle licenses variable (in gem JSON data)
-        #                
+        #
         license_var = json_data.get('licenses', None)
         if license_var:
-                license_object = {
-                    'url': gem_url,
-                    'section': 'licenses',
-                    'license': ' AND '.join(license_var)
-                }
-                logging.info(f'found license {license_var} in {gem_url}')
-                licenses_from_config.append(license_object)
+            license_object = {
+                'url': gem_url,
+                'section': 'licenses',
+                'license': ' AND '.join(license_var),
+            }
+            logging.info(f'found license {license_var} in {gem_url}')
+            licenses_from_config.append(license_object)
 
         #
         # Identify source code repository
@@ -65,7 +62,6 @@ class Gem(LookupURL):
                     inner_json_data = None
                     break
 
-            # TODO: add version from JSON data to suggested URL
             version = json_data["version"]
 
             repo_url_version = self.gitrepo.gitrepo_with_version(inner_json_data, version)
@@ -73,7 +69,7 @@ class Gem(LookupURL):
                 repo_suggestions.append({
                     'repository': repo_url_version,
                     'config_url': gem_url,
-                    'config_path': complete_path
+                    'config_path': complete_path,
                 })
                 fixed_url = fix_url('gems', repo_url_version)
                 if fixed_url:
@@ -88,13 +84,13 @@ class Gem(LookupURL):
             if 'metadata' in json_data:
                 metadata = json_data['metadata']
                 if 'source_code_url' in metadata:
-                    repo_url = metadata ['source_code_url']
-                
+                    repo_url = metadata['source_code_url']
+
         config_details = {
             'config_url': gem_url,
-            'homepage': json_data.get('homepage_uri',''),
-            'name': json_data.get('name',''),
-            'version': json_data.get('version',''),
+            'homepage': json_data.get('homepage_uri', ''),
+            'name': json_data.get('name', ''),
+            'version': json_data.get('version', ''),
             'repository': repo_url,
         }
 
@@ -104,7 +100,6 @@ class Gem(LookupURL):
             'config_details': config_details,
         }
 
-
     def _find_latest_version(self, pkg_name):
         gem_url = f'https://rubygems.org/api/v1/gems/{pkg_name}.json'
         retriever = Retriever()
@@ -113,13 +108,10 @@ class Gem(LookupURL):
         if not success:
             return None
         decoded_content = retrieved_result['decoded_content']
-        try:
-            json_data = json.loads(decoded_content)
-        except:
-            return None
+        json_data = json.loads(decoded_content)
 
         return json_data['version']
-    
+
     def lookup_url(self, url):
 
         url = url.strip('/')
@@ -130,33 +122,32 @@ class Gem(LookupURL):
             if purl_object.version:
                 pkg_version = purl_object.version
             else:
-                # TODO: download https://rubygems.org/api/v1/gems/PROJECT.json and identify latest version
+                # TODO: download https://rubygems.org/api/v1/gems/PROJECT.json and identify latest version # noqa: T101
                 pkg_version = f'{self._find_latest_version(purl_object.name)}'
 
             gem_urls = [
-                f'https://rubygems.org/api/v2/rubygems/{purl_object.name}/versions/{pkg_version}.json'
+                f'https://rubygems.org/api/v2/rubygems/{purl_object.name}/versions/{pkg_version}.json',
             ]
             logging.info(f'suggested gem conf urls from pkg:: {gem_urls}')
         elif url.startswith('http'):
             # https
 
-            # TODO: check if URL contains https://rubygems.org/api/v2/rubygems
+            # TODO: check if URL contains https://rubygems.org/api/v2/rubygems # noqa: T101
             gem_urls = [
                 url,
                 f'{url}/json',
-                f'{url}/json'.replace('/project/','/gem/'),
+                f'{url}/json'.replace('/project/', '/gem/'),
             ]
             logging.info(f'suggested gem conf urls from http:: {gem_urls}')
         else:
-            # TODO: read license from url
-            new_url = url.replace('@','/')
-            new_url = new_url.replace('==','/')
+            # TODO: read license from url # noqa: T101
+            new_url = url.replace('@', '/')
+            new_url = new_url.replace('==', '/')
             gem_urls = [
-                f'https://rubygems.org/api/v2/rubygems/{new_url}.json'
-                  #https://rubygems.org/api/v2/rubygems/digest-crc/versions/0.6.5.json:
+                f'https://rubygems.org/api/v2/rubygems/{new_url}.json',
             ]
             logging.info(f'suggested gem conf urls form *: {gem_urls}')
-            
+
         #
         # Loop through gem urls,
         # * once data found in one url:
@@ -172,7 +163,7 @@ class Gem(LookupURL):
                 logging.info(f'found gems data via {gem_url}: {gem_data["repo_suggestions"]}')
                 break
         if not identified_gem_data:
-            # TODO: add return data
+            # TODO: add return data # noqa: T101
             return None
 
         #
@@ -210,7 +201,7 @@ class Gem(LookupURL):
         repo_data['meta'] = {}
         repo_data['meta']['url_type'] = 'gem'
         repo_data['meta']['config_details'] = identified_gem_data['config_details']
-        
+
         repo_data['details']['suggestions'].append([gem_url])
         repo_data['details']['config_details'] = licenses_from_config
         repo = identified_gem_data['config_details']['repository']
@@ -228,4 +219,3 @@ class Gem(LookupURL):
             repo_data['identified_license'] = all_licenses
 
         return repo_data
-    
