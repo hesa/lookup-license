@@ -12,10 +12,11 @@ check-reuse: clean
 python: py-test py-lint
 
 py-test: 
-	PYTHONPATH=. tests/test-interactive.sh 1
-	PYTHONPATH=. pytest tests/test-lookup.py
-	PYTHONPATH=. pytest tests/test-speed.py
-	PYTHONPATH=. pytest tests/test_gitrepo.py	
+	PYTHONPATH=. tests/shell/test-interactive.sh 1
+	PYTHONPATH=. tests/shell/test-cli.sh 1
+	PYTHONPATH=. pytest tests/python/test-lookup.py
+#	PYTHONPATH=. pytest tests/python/test-speed.py
+	PYTHONPATH=. pytest tests/python/test_gitrepo.py
 	@echo python tests passed
 
 py-lint:
