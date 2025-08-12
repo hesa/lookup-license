@@ -1,0 +1,8 @@
+{
+  "ecosystems": {
+    "gems": {
+      "https://github.com/googleapis/google-cloud-ruby/tree/master/google-cloud-core": "https://github.com/googleapis/google-cloud-ruby/tree/main/google-cloud-core",
+      "https://github.com/googleapis/google-cloud-ruby/tree/master/google-cloud-storage": "https://github.com/googleapis/google-cloud-ruby/tree/main/google-cloud-storage"    }
+  }
+}
+    
