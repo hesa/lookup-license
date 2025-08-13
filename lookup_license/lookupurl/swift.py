@@ -12,7 +12,7 @@ import re
 class Swift(LookupURL):
 
     swiftpackageindex = None
-    
+
     def __init__(self):
         logging.debug("Swift()")
         self.gitrepo = GitRepo()
@@ -29,7 +29,7 @@ class Swift(LookupURL):
         # Download git repo list for all indexed packages on swiftpackageindex.com
         # * URL comes from: https://swiftpackageindex.com/faq#how-does-it-work
         # * seems to list only github packages
-        # TODO: write test to see if only github packages
+        # TODO: write test to see if only github packages # noqa: T101
         packages_url = 'https://github.com/SwiftPackageIndex/PackageList/raw/refs/heads/main/packages.json'
 
         if not Swift.swiftpackageindex:
@@ -40,24 +40,19 @@ class Swift(LookupURL):
                 return None
             decoded_content = retrieved_result['decoded_content']
             Swift.swiftpackageindex = decoded_content
-        
-        try:
-            json_data = json.loads(decoded_content)
-        except:
-            return None
+
+        json_data = json.loads(decoded_content)
 
         purl_object = PackageURL.from_string(url)
 
-
-        #TODO: use the API to get the package meta data and from that the licenses
+        # TODO: use the API to get the package meta data and from that the licenses # noqa: T101
         # * https://swiftpackageindex.com/<org>/collection.json
         # * licenses should be returned, see below
-        
         # Note: only github.com repos are indexed at swiftpackageindex
-        
+
         # if name in purl
         if purl_object.name:
-            
+
             # if namespace in purl
             if purl_object.namespace:
                 reg_exp = f'https://github.com/{purl_object.namespace}/{purl_object.name}'
@@ -70,7 +65,7 @@ class Swift(LookupURL):
             urls = [pkg for pkg in json_data if reg_exp in pkg]
             if len(urls) == 0:
                 logging.warning(f'Could not identify a repository for {url}')
-                
+
             if len(urls) == 1:
                 pass
             else:
@@ -89,7 +84,7 @@ class Swift(LookupURL):
             'homepage': '',
             'name': '',
             'version': '',
-            'repository': git_url
+            'repository': git_url,
         }
 
         return {
@@ -97,12 +92,11 @@ class Swift(LookupURL):
             'repo_suggestions': [{
                 'repository': git_url,
                 'config_url': '',
-                'config_path': ''
+                'config_path': '',
             }],
             'config_details': config_details,
         }
-        
-    
+
     def _guess_urls(self, url):
         if not self._is_purl(url):
             return {
@@ -110,17 +104,16 @@ class Swift(LookupURL):
                 'repo_suggestions': [{
                     'repository': url.strip('/'),
                     'url': url,
-                }]
+                }],
             }
 
         url_suggestions = []
-        
-        # purl 
+
+        # purl
         purl_object = PackageURL.from_string(url)
         p_namespace = purl_object.namespace
-        p_name = purl_object.name
         p_version = purl_object.version
-        
+
         # If github - compile repo url from the bits and pieces in the purl
         if p_namespace and 'github.com' in p_namespace:
             if p_version:
@@ -135,17 +128,15 @@ class Swift(LookupURL):
 
         # ... what's next to the moon?
         # any other ways to identify repo?
-        
+
         return {
             'licenses': [],
             'repo_suggestions': url_suggestions,
         }
 
     def lookup_url(self, url):
-        orig_url = url
         # Try identifying the purl in swiftpackageindex.com
         swiftpackageindex_data = self._try_swiftpackageindex(url)
-        license_from_config = None
         if swiftpackageindex_data:
             data_suggestion = swiftpackageindex_data
         # Try identifying data using the data in the purl object
@@ -159,7 +150,7 @@ class Swift(LookupURL):
         # The 'urls' variable above contains suggestions for
         # repository urls. Loop through these and analyse them if data
         # is found, use the data from that repo
-        uniq_repos = set([repo['repository'] for repo in url_suggestions])
+        uniq_repos = set([repo['repository'] for repo in url_suggestions]) # noqa: C403
         repo_data = None
         for repo in uniq_repos:
             repo_data = self.gitrepo.lookup_url(repo)
@@ -175,20 +166,18 @@ class Swift(LookupURL):
         all_licenses = set()
         for lic in licenses_from_config:
             all_licenses.add(lic)
-            
+
         for lic in repo_data['identified_license']:
             all_licenses.add(lic)
-        
+
         repo_data['provided'] = url
-        
+
         repo_data['meta'] = {}
         repo_data['meta']['url_type'] = 'gem'
-        repo_data['meta']['config_details'] = data_suggestion.get('config_details',{})
-        
-#        repo_data['details']['suggestions'].append([gem_url])
+        repo_data['meta']['config_details'] = data_suggestion.get('config_details', {})
+
         repo_data['details']['config_licenses'] = licenses_from_config
 
         repo_data['identified_license'] = [LicenseDatabase.expression_license(x)['identified_license'] for x in all_licenses]
 
         return repo_data
-        

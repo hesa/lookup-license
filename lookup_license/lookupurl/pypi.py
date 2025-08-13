@@ -15,7 +15,7 @@ class Pypi(LookupURL):
         logging.debug("Pypi()")
         self.gitrepo = GitRepo()
         super().__init__()
-    
+
     def _try_pypi_config_url(self, pypi_url):
         retriever = Retriever()
         retrieved_result = retriever.download_url(pypi_url)
@@ -23,10 +23,7 @@ class Pypi(LookupURL):
         if not success:
             return None
         decoded_content = retrieved_result['decoded_content']
-        try:
-            json_data = json.loads(decoded_content)
-        except:
-            return None
+        json_data = json.loads(decoded_content)
 
         #
         # Handle classifiers (in pypi JSON data)
@@ -37,7 +34,7 @@ class Pypi(LookupURL):
                 license_object = {
                     'url': pypi_url,
                     'section': 'info.classifiers',
-                    'license': classifier
+                    'license': classifier,
                 }
                 licenses_from_config.append(license_object)
 
@@ -46,12 +43,12 @@ class Pypi(LookupURL):
         #
         license_var = json_data['info'].get('license', None)
         if license_var:
-                license_object = {
-                    'url': pypi_url,
-                    'section': 'info.license',
-                    'license': license_var
-                }
-                licenses_from_config.append(license_object)
+            license_object = {
+                'url': pypi_url,
+                'section': 'info.license',
+                'license': license_var,
+            }
+            licenses_from_config.append(license_object)
         #
         # Identify source code repository
         #
@@ -63,7 +60,7 @@ class Pypi(LookupURL):
             'info.homepage',
             'info.project_urls.Homepage',
         ]
-        # TODO: add version from JSON data to suggested URL
+        # TODO: add version from JSON data to suggested URL # noqa: T101
         for complete_path in JSON_PATHS:
             inner_json_data = json_data
             for path in complete_path.split('.'):
@@ -72,7 +69,7 @@ class Pypi(LookupURL):
                 else:
                     inner_json_data = None
                     break
-                
+
             if inner_json_data:
                 repo_suggestions.append({
                     'repository': inner_json_data,
@@ -87,13 +84,13 @@ class Pypi(LookupURL):
         homepage = self._get_key('info.home_page', json_data)
         name = self._get_key('info.name', json_data)
         version = self._get_key('info.version', json_data)
-            
+
         config_details = {
             'config_url': pypi_url,
             'homepage': homepage,
             'name': name,
             'version': version,
-            'repository': repo_url
+            'repository': repo_url,
         }
 
         return {
@@ -110,19 +107,19 @@ class Pypi(LookupURL):
             else:
                 return None
         return inner_data
-    
+
     def _get_pypi_repo(self, paths, data):
         for path in paths:
             _data = self._get_key(path, data)
             if _data:
                 return _data
-    
+
     def lookup_url(self, url):
 
         url = url.strip('/')
-        
+
         if url.startswith('pkg:'):
-            # purl 
+            # purl
             purl_object = PackageURL.from_string(url)
             pypi_urls = []
             if purl_object.version:
@@ -134,16 +131,14 @@ class Pypi(LookupURL):
             pypi_urls = [
                 url,
                 f'{url}/json',
-                f'{url}/json'.replace('/project/','/pypi/'),
+                f'{url}/json'.replace('/project/', '/pypi/'),
             ]
         else:
-            new_url = url.replace('@','/')
-            new_url = new_url.replace('==','/')
+            new_url = url.replace('@', '/')
+            new_url = new_url.replace('==', '/')
             pypi_urls = [
-                f'https://pypi.org/pypi/{new_url}/json'
+                f'https://pypi.org/pypi/{new_url}/json',
             ]
-            
-            
 
         #
         # Loop through pypi urls, if data found in one url
@@ -157,14 +152,14 @@ class Pypi(LookupURL):
                 identified_pypi_data = pypi_data
                 break
         if not identified_pypi_data:
-            # TODO: add return data
+            # TODO: add return data # noqa: T101
             return None
 
         #
         # The data above contains suggestions for repository
         # urls. Loop through these and analyse them if data is found,
         # use the data from that repo
-        uniq_repos = set([repo['repository'] for repo in identified_pypi_data['repo_suggestions']])
+        uniq_repos = set([repo['repository'] for repo in identified_pypi_data['repo_suggestions']]) # noqa: C403
         repo_data = None
         for repo in uniq_repos:
             repo_data = self.gitrepo.lookup_url(repo)
@@ -175,15 +170,15 @@ class Pypi(LookupURL):
                 repo_data = None
 
         if not repo_data:
-            #TODO: addreturn data
+            # TODO: addreturn data # noqa: T101
             return None
-        
-        all_licenses = set()        
+
+        all_licenses = set()
         licenses_from_config = identified_pypi_data['licenses']
 
         for lic in licenses_from_config:
             all_licenses.add(lic['license'])
-            
+
         for lic in repo_data['identified_license']:
             all_licenses.add(lic)
 
@@ -195,10 +190,5 @@ class Pypi(LookupURL):
         repo_data['details']['config_licenses'] = licenses_from_config
         repo_data['identified_license'] = [LicenseDatabase.expression_license(x)['identified_license'] for x in all_licenses]
 
-        # TODO: rmeove the output to file
-        #with open('pypi.json', 'w') as fp:
-        #    print(json.dump(repo_data, fp, indent=4))
-
         logging.debug("returning from pypi")
         return repo_data
-    
