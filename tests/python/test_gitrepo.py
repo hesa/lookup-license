@@ -157,6 +157,36 @@ def test_has_not_branch():
     for branch_url in NON_BRANCH_URLS:
         assert not gitrepo.has_branch(branch_url) 
 
+def test_gitrepo_repo():
+    URLS=[
+        ('https://github.com/aboutcode-org/scancode-toolkit',
+         'https://github.com/aboutcode-org/scancode-toolkit'),
+        ('https://github.com/aboutcode-org/scancode-toolkit/',
+         'https://github.com/aboutcode-org/scancode-toolkit'),        
+        ('https://github.com/aboutcode-org/scancode-toolkit/tree/v32.4.0',
+         'https://github.com/aboutcode-org/scancode-toolkit'),
+        ('https://github.com/aboutcode-org/scancode-toolkit/blob/v32.4.0/etc/release/scancode-create-release-app-linux.sh',
+         'https://github.com/aboutcode-org/scancode-toolkit')
+    ]
+    for url, expected in URLS:
+        actual = gitrepo.gitrepo_repo(url)
+        assert actual == expected
+
+def test_gitrepo_with_version():
+    version = 'v32.4.0'
+    expected = f'https://github.com/aboutcode-org/scancode-toolkit/tree/{version}'
+
+    URLS=['https://github.com/aboutcode-org/scancode-toolkit',
+          'https://github.com/aboutcode-org/scancode-toolkit/',
+          'https://github.com/aboutcode-org/scancode-toolkit/tree/v32.4.0',
+          'https://github.com/aboutcode-org/scancode-toolkit/tree/vAPA',
+          'https://github.com/aboutcode-org/scancode-toolkit/blob/v32.4.0/etc/release/scancode-create-release-app-linux.sh'
+    ]
+    for url in URLS:
+        actual = gitrepo.gitrepo_with_version(url, version)
+        assert actual == expected
+        
+        
 def OBSOLETE_test_suggestions_nobranch():
     repo = 'https://github.com/hesa/lookup-license'
 
