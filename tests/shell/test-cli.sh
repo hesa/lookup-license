@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# SPDX-FileCopyrightText: 2025 Henrik Sandklef
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 DEBUG=True
 
 PYPI_PACKAGES=("pkg:pypi/boto3@1.35.99;Apache-2.0 AND License :: OSI Approved :: Apache Software License"
