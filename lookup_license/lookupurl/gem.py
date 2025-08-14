@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Henrik Sandklef
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from lookup_license.lookupurl.lookupurl import LookupURL
 from lookup_license.lookupurl.gitrepo import GitRepo
 
@@ -7,7 +11,6 @@ from lookup_license.lookupurl.fixes import fix_url
 
 from packageurl import PackageURL
 
-from license_expression import ExpressionError
 
 import json
 import logging
@@ -186,36 +189,19 @@ class Gem(LookupURL):
         if not repo_data:
             repo_data = self.gitrepo.empty_data()
 
-        all_licenses = set()
-        licenses_from_config = identified_gem_data.get('licenses')
-
-        for lic in licenses_from_config:
-            all_licenses.add(lic['license'])
-
-        if repo_data.get('identified_license'):
-            for lic in repo_data.get('identified_license'):
-                all_licenses.add(lic)
+        licenses_object = self.gitrepo.licenses(identified_gem_data, repo_data)
+        version = identified_gem_data['config_details']['version']
+        repositories = self.gitrepo.repositories_from_details(repo_data, version)
 
         repo_data['provided'] = url
-
         repo_data['meta'] = {}
         repo_data['meta']['url_type'] = 'gem'
         repo_data['meta']['config_details'] = identified_gem_data['config_details']
-
+        repo_data['meta']['repository'] = ', '.join(repositories)
         repo_data['details']['suggestions'].append([gem_url])
-        repo_data['details']['config_details'] = licenses_from_config
-        repo = identified_gem_data['config_details']['repository']
-        version = identified_gem_data['config_details']['version']
-        # epxerimental zip file
-        if repo:
-            zip_url = self.gitrepo.gitrepo_zip_file(repo, version)
-        else:
-            zip_url = ''
-        repo_data['meta']['source_zip'] = zip_url
-
-        try:
-            repo_data['identified_license'] = [LicenseDatabase.expression_license(x)['identified_license'] for x in all_licenses]
-        except ExpressionError:
-            repo_data['identified_license'] = all_licenses
+        repo_data['details']['config_licenses'] = licenses_object['config_license']
+        repo_data['identified_license'] = licenses_object['identified_license']
+        repo_data['identified_license_string'] = licenses_object['identified_license_string']
+        
 
         return repo_data

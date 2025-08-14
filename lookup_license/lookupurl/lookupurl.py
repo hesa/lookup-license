@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Henrik Sandklef
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from lookup_license.lookuplicense import LookupLicense
 from lookup_license.retrieve import Retriever
 
@@ -89,3 +93,4 @@ class LookupURL:
             'success': success,
         }
         return res
+
