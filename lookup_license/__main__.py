@@ -11,6 +11,7 @@ import sys
 
 from lookup_license.lookuplicense import LookupLicense
 from lookup_license.lookuplicense import LicenseTextReader
+from lookup_license.lookupurl.factory import LookupURLFactory
 from lookup_license.ll_shell import LookupLicenseShell
 from lookup_license.format import FormatterFactory
 import lookup_license.config
@@ -24,7 +25,7 @@ def get_parser():
     )
 
     parser.add_argument('-v', '--verbose',
-                        action='store_true',
+                        action='count',
                         help='output verbose information',
                         default=False)
 
@@ -33,6 +34,10 @@ def get_parser():
                         help='output version information',
                         default=False)
 
+    parser.add_argument('-of', '--output-format',
+                        type=str,
+                        default='text')
+
     parser.add_argument('-f', '--file',
                         action='store_true',
                         help='read license from file',
@@ -40,12 +45,32 @@ def get_parser():
 
     parser.add_argument('-u', '--url',
                         action='store_true',
-                        help='read license from url',
+                        help='identify license (scanning content) from url',
                         default=False)
 
-    parser.add_argument('-gh', '--github',
+    parser.add_argument('--gitrepo',
                         action='store_true',
-                        help='try to read license from github repo url',
+                        help='try to read license from license file from git repo url (no scanning)',
+                        default=False)
+
+    parser.add_argument('--purl',
+                        action='store_true',
+                        help='try to read license from license file url from purl/package url (no scanning)',
+                        default=False)
+
+    parser.add_argument('--swift',
+                        action='store_true',
+                        help='try to read license from license file url from purl/package url (no scanning)',
+                        default=False)
+
+    parser.add_argument('--pypi',
+                        action='store_true',
+                        help='try to read license from pypi package (no scanning)',
+                        default=False)
+
+    parser.add_argument('--gem',
+                        action='store_true',
+                        help='try to read license from rubygems.org package (no scanning)',
                         default=False)
 
     parser.add_argument('-s', '--shell',
@@ -80,11 +105,28 @@ def license_file(ll, license_file):
     return result
 
 def license_url(ll, url):
-    result = ll.lookup_license_url(url)
+    # in case it is a url to an HTML page
+    result = LookupURLFactory.lookupurl('url').lookup_url(url)
     return result
 
-def github_url(ll, url):
-    result = ll.lookup_github_url(url)
+def gitrepo_url(ll, url):
+    result = LookupURLFactory.lookupurl('gitrepo').lookup_url(url)
+    return result
+
+def purl_url(ll, url):
+    result = LookupURLFactory.lookupurl('purl').lookup_url(url)
+    return result
+
+def swift_url(ll, url):
+    result = LookupURLFactory.lookupurl('swift').lookup_url(url)
+    return result
+
+def pypi_url(ll, url):
+    result = LookupURLFactory.lookupurl('pypi').lookup_url(url)
+    return result
+
+def gem_url(ll, url):
+    result = LookupURLFactory.lookupurl('gem').lookup_url(url)
     return result
 
 def license_text(ll, texts, minimum_score):
@@ -102,8 +144,11 @@ def validate(ll, args, expr):
 def main():
     args = parse()
 
-    if args.verbose:
-        logging.getLogger(lookup_license.config.module_name).setLevel(logging.DEBUG)
+    logging.basicConfig(force=True, level=logging.WARNING)
+    if args.verbose > 1:
+        logging.basicConfig(force=True, level=logging.INFO)
+    if args.verbose > 2:
+        logging.basicConfig(force=True, level=logging.DEBUG)
 
     ll = LookupLicense()
 
@@ -113,36 +158,55 @@ def main():
         elif args.shell:
             return interactive_shell(ll)
         else:
-            err = None
+            formatter = FormatterFactory.formatter(args.output_format)
+
+            # no command line arguments
+            # read license text from stdin
             if args.input == []:
                 lt_reader = LicenseTextReader()
                 if args.file:
                     license_file_name = lt_reader.read_license_file()
                     result = license_file(ll, license_file_name)
+                    out, err = formatter.format_license(result, args.verbose)
                 elif args.url:
                     license_url_name = lt_reader.read_license_url()
                     result = license_url(ll, license_url_name)
+                    out, err = formatter.format_license(result, args.verbose)
                 else:
                     license_input = lt_reader.read_license_text()
                     result = license_text(ll, [license_input], float(args.minimum_score))
+                    out, err = formatter.format_license(result, args.verbose)
+
+            # check command line arguments
             elif args.input:
+                err = None
                 if args.file:
                     result = license_file(ll, args.input[0])
-                elif args.github:
-                    result = github_url(ll, args.input[0])
-                    if not result['normalized']:
-                        err = f'Could not get license information from github url "{args.input[0]}".'
-                        out = ''
+                    out, err = formatter.format_license(result, args.verbose)
+                elif args.gitrepo:
+                    result = gitrepo_url(ll, args.input[0])
+                    out, err = formatter.format_lookup_urls(result, args.verbose)
                 elif args.url:
                     result = license_url(ll, args.input[0])
+                    out, err = formatter.format_lookup_urls(result, args.verbose)
+                elif args.purl:
+                    result = purl_url(ll, args.input[0])
+                    out, err = formatter.format_lookup_urls(result, args.verbose)
+                elif args.swift:
+                    result = swift_url(ll, args.input[0])
+                    out, err = formatter.format_lookup_urls(result, args.verbose)
+                elif args.pypi:
+                    result = pypi_url(ll, args.input[0])
+                    out, err = formatter.format_lookup_urls(result, args.verbose)
+                elif args.gem:
+                    result = gem_url(ll, args.input[0])
+                    out, err = formatter.format_lookup_urls(result, args.verbose)
                 else:
                     result = license_text(ll, args.input, float(args.minimum_score))
-
+                    out, err = formatter.format_license(result, args.verbose)
             if not err:
-                formatter = FormatterFactory.formatter("text")
                 try:
                     validate(ll, args, result)
-                    out, err = formatter.format_license(result, args.verbose)
                 except Exception as e:
                     out = ""
                     out, err = formatter.format_error(e, args.verbose)
@@ -158,6 +222,8 @@ def main():
 
     except Exception as e:
         print(str(e), file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
 
 
 if __name__ == '__main__':
