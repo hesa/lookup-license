@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Henrik Sandklef
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from lookup_license.lookupurl.gitrepo import GitRepo
 from lookup_license.lookupurl.gem import Gem
 from lookup_license.lookupurl.purl import Purl
