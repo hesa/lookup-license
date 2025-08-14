@@ -44,17 +44,16 @@ class JsonFormatter(Formatter):
 class TextFormatter(Formatter):
 
     def format_license(self, lic, verbose=False):
-        ambigs = []
         if not lic or (not lic.get('status')):
             return None, f'Could not identify license for {lic["provided"][:100]}.....'
 
         if verbose:
             ret = ['License:     ']
-            for l in lic['normalized']:
-                ret.append(f' * {l["license"]}  ({l["score"]})')
+            for _lic in lic['normalized']:
+                ret.append(f' * {_lic["license"]}  score:{_lic["score"]}')
             ret.append(f'Ambiguities: {lic["ambiguities"]}')
         else:
-            ret = [", ".join([l['license'] for l in lic['normalized']])]
+            ret = [", ".join([_lic['license'] for _lic in lic['normalized']])]
         return '\n'.join(ret), None
 
     def format_error(self, exception, verbose=False):
@@ -66,26 +65,39 @@ class TextFormatter(Formatter):
         else:
             return None, f'{exception}'
 
-    def _add_if_present(self, title, data, key, store):
-        if data.get(key):
-            store.append(f'{title:<20} {data.get(key)}')
-        
+    def _add(self, title, data, key, store):
+        #if data.get(key):
+        store.append(f'{title:<20} {data.get(key,'')}')
+
     def format_lookup_urls(self, looked_up_urls, verbose=False):
         if not looked_up_urls:
             return '', 'No license data found.'
+
+        if 'identified_license_string' in looked_up_urls:
+            identified_license_string = looked_up_urls['identified_license_string']
+        else:
+            identified_license_string = ''
+
         if verbose:
             ret = []
             if 'meta' in looked_up_urls:
                 meta = looked_up_urls['meta']
-                if 'config_details' in meta:
+                if 'config_details' in meta and meta['config_details']:
                     config_details = meta['config_details']
-                    self._add_if_present('Name:', config_details, 'name', ret)
-                    self._add_if_present('Version:', config_details, 'version', ret)
-                    self._add_if_present('Homepage:', config_details, 'homepage', ret)
-                    self._add_if_present('Repository:', config_details, 'repository', ret)
-                    #self._add_if_present('Source code zip:', meta, 'source_zip', ret)
+                    self._add('Name:', config_details, 'name', ret)
+                    self._add('Version:', config_details, 'version', ret)
+                    self._add('Homepage:', config_details, 'homepage', ret)
+
+                    if meta.get('repository'):
+                        ret.append(f'{"Repository:":<20} {meta.get("repository","")}')
+                    elif 'repository' in config_details:
+                        self._add('Repository:', config_details, 'repository', ret)
+                    else:
+                        ret.append(f'{"Repository:":<20}')
+                        
             orig_url_title = 'Original url:'
             ret.append(f'{orig_url_title:<20} {looked_up_urls["provided"]}')
+            ret.append(f'{"License identified:":<20} {identified_license_string}')
             ret.append('License identified in repository:')
             for url in looked_up_urls['details']['successful_urls']:
                 ret.append(f' * {" AND ".join(url["license"])} <-- {url["url"]}')
@@ -94,7 +106,7 @@ class TextFormatter(Formatter):
                 config_licenses = looked_up_urls['details']['config_licenses']
                 if config_licenses:
                     for lic in config_licenses:
-                        ret.append(f' * {lic["license"]} <-- {lic["url"]} ({lic["section"]})')
+                        ret.append(f' * {lic["license"]} <-- {lic["url"]}')
             return '\n'.join(ret), None
-        return ' AND '.join(looked_up_urls['identified_license']), None
         
+        return identified_license_string, None
