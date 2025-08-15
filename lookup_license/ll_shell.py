@@ -107,5 +107,6 @@ class LookupLicenseShell(cmd.Cmd):
         if out:
             print(out)
 
+
 if __name__ == '__main__':
     LookupLicenseShell().cmdloop()
