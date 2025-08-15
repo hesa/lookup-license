@@ -5,28 +5,25 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 from licensedcode import cache # noqa: I900
-from packageurl import PackageURL
 from cachetools import LFUCache
 from cachetools import cached
 import logging
-import magic
-import requests
 import traceback
 
-
-from flame.license_db import FossLicenses # noqa: I900
-from flame.license_db import Validation # noqa: I900
+# from flame.license_db import FossLicenses # noqa: I900
+# from flame.license_db import Validation # noqa: I900
 
 import lookup_license.config
-from lookup_license.gitrepo import GitRepo
+from lookup_license.license_db import LicenseDatabase
+
+# from lookup_license.lookupurl import LookupURL # noqa: I900
 
 MAX_CACHE_SIZE = 10000
 MIN_SCORE = 80
 MIN_LICENSE_LENGTH = 200
 
-MAIN_BRANCHES = ['main', 'master' ]
+MAIN_BRANCHES = ['main', 'master']
 LICENSE_FILES = ['LICENSE', 'LICENSE.txt', 'COPYING']
-
 
 class LicenseCache(LFUCache):
 
@@ -77,10 +74,7 @@ class LicenseTextReader():
 class LookupLicense():
 
     def __init__(self):
-        logging.debug("Creating LicenseLookup object")
         self.idx = None
-        self.fl = FossLicenses()
-        self.gitrepo = GitRepo()
         self.license_reader = None
 
     def __init_license_index(self):
@@ -97,46 +91,14 @@ class LookupLicense():
             url = f'https://{url}'
         return url
 
-    def _guess_github_license_url(self, url):
-        url = self.__fix_protocol(url)
-
-        urls = []
-        for branch in MAIN_BRANCHES:
-            for license_file in LICENSE_FILES:
-                urls.append(f'{url}/blob/{branch}/{license_file}')
-        return urls
-
-    def _guess_gitlab_license_url(self, url):
-        url = self.__fix_protocol(url)
-
-        urls = []
-        for branch in MAIN_BRANCHES:
-            for license_file in LICENSE_FILES:
-                urls.append(f'{url}/-/blob/{branch}/{license_file}')
-        return urls
-
     def _guess_codeberg_license_url(self, url):
-        url = self.__fix_protocol(url)
-
         urls = []
         for branch in MAIN_BRANCHES:
             for license_file in LICENSE_FILES:
                 urls.append(f'{url}/src/branch/{branch}/{license_file}')
         return urls
 
-    def _guess_repo_license_url(self, url):
-        if "github" not in url.lower():
-            return None
-
-        url = self.__fix_protocol(url)
-
-        github_urls = []
-        for branch in MAIN_BRANCHES:
-            for license_file in LICENSE_FILES:
-                github_urls.append(f'{url}/blob/{branch}/{license_file}')
-        return github_urls
-
-    def _fix_url(self, url):
+    def __fix_url(self, url):
         if "github" in url:
             url_split = url.split('/')
             org = url_split[3]
@@ -158,13 +120,13 @@ class LookupLicense():
             new = url.replace('/src/', '/raw/')
             return new
 
-    @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
+#    @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
     def lookup_license_text(self, license_text, minimum_score=lookup_license.config.default_minimum_score):
         # if short license text, it is probably a license name
         # try normalizing with foss-flame
         if len(license_text) < MIN_LICENSE_LENGTH:
             try:
-                res = self.fl.expression_license(license_text, update_dual=False)
+                res = LicenseDatabase.expression_license(license_text)
                 return {
                     "identification": "flame",
                     "provided": license_text,
@@ -193,7 +155,7 @@ class LookupLicense():
         sorted_scan_result = sorted(scan_result, key=lambda x: x['score'], reverse=False)
         for s in sorted_scan_result:
             if s['score'] >= minimum_score:
-                license_name = self.fl.expression_license(s['license_expression'], update_dual=False)['identified_license']
+                license_name = LicenseDatabase.expression_license(s['license_expression'])['identified_license']
                 if license_name not in identified_license_names:
                     identified_license_names.add(license_name)
                     identified_licenses.append(
@@ -206,7 +168,7 @@ class LookupLicense():
             "provided": license_text,
             "normalized": identified_licenses,
             "ambiguities": 0,
-            "meta": scan_result,
+            "status": True,
         }
 
     def lookup_license_file(self, license_file):
@@ -216,128 +178,68 @@ class LookupLicense():
             return self.lookup_license_text(content)
 
     @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
-    def lookup_gitrepo_url_shallow(self, url):
+    def OBSOLETE_lookup_gitrepo_url_shallow(self, url):
+        lookup_url = None
+        lookup_url.lookup_license_url(url, "gitrepo")
+
         branched_suggestions = self.gitrepo.suggest_license_files(url)
-        print("suggestions .... ")
         for suggestions in branched_suggestions:
-            print("lo...")
             res = self.__lookup_gitrepo_url(url, suggestions)
 
-            print("RES ..... " + str(res))
             if not res:
                 continue
-            
+
             # if a license has been identified,
             # assume this is the branch to use (details can be found in res)
             if res['identified_licenses']:
                 return res
 
         # if no license found, return None (even if implicit)
-        return None 
+        return None
 
     @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
-    def lookup_purl_shallow(self, purl):
-        purl_object = PackageURL.from_string(purl).to_dict()
-        purl_type = purl_object['type']
-        print("1")
-        _map = {
-            'github': self._guess_purl_github
-        }
+    def OBSOLETE_lookup_purl_shallow(self, purl):
+        lookup_url = None
+        res = lookup_url.lookup_license_url(purl, "purl")
 
-        urls = self._guess_purl_github(purl, purl_object)
-        return self.__lookup_gitrepo_url(purl, urls)
-
-    def _guess_purl_github(self, purl, purl_object):
-        type = purl_object['type']
-        namespace = purl_object['namespace']
-        name = purl_object['name']
-        version = purl_object['version']
-
-        urls = []
-        for tag in ['refs/tags']:
-            for license_file in LICENSE_FILES:
-                gh_url = f'https://raw.githubusercontent.com/{namespace}/{name}/{tag}/{version}/{license_file}'
-                urls.append(gh_url)
-        return urls
-
-    def __lookup_gitrepo_url(self, url, urls):
-        guesses = []
-        identified_licenses = set()
-        for _url in urls:
-            print("_url: " + _url)
-            try:
-                res = self.lookup_license_url(_url)
-            except Exception as e:
-                print("eeeeeee")
-                print("eeeeeee " + str(e))
-            print("res")
-            print("res: " + str(res))
-            if res['normalized']:
-                for res_object in res['normalized']:
-                    lic = res_object['license']
-                    identified_licenses.add(lic)
-            guesses.append(res)
-
-        return {
-            'url': url,
-            'identified_licenses': list(identified_licenses),
-            'details': guesses,
-        }
-        
-    @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
-    def lookup_license_url(self, url):
-        tried_urls = []
-        logging.debug(f'lookup_license_url {url}')
-        logging.info(f'lookup_license_url {url}')
-        self.__init_license_index()
-        logging.debug(f'retrieving {url}')
-        response = requests.get(url, stream=True, timeout=5)
-        print("response...")
-        print("response... r" + str(response))
-        print("response... s" + str(response.status_code))
-        content = response.content
-        code = response.status_code
-        decoded_content = content.decode('utf-8')
-        tried_urls.append({
-            "url": url,
-            "status_code": code,
-            "content": decoded_content,
-        })
-        # TODO: REMOVE BELOW
-        if 1 == 2:
-            if code == 404 or not self._is_text(decoded_content):
-                new_url = self._fix_url(url)
-                logging.debug(f'Trying {new_url} instead of {url}')
-                response = requests.get(new_url, stream=True, timeout=5)
-                code = response.status_code
-                content = response.content
-                decoded_content = content.decode('utf-8')
-                tried_urls.append({
-                    "url": new_url,
-                    "status_code": code,
-                    "content": decoded_content,
-                })
-        if code == 404 or not self._is_text(decoded_content):
-            return {
-                "identification": "lookup-license",
-                "provided": url,
-                "normalized": None,
-                "ambiguities": 0,
-                "meta": {
-                    "urls": tried_urls,
-                },
-            }
-        logging.debug(f'looking up content: {decoded_content[:20]}')
-        res = self.lookup_license_text(decoded_content)
-        res['provided'] = url
-        res['tried_urls'] = [x['url'] for x in tried_urls]
         return res
 
-    def _is_text(self, buffer):
-        buf_type = magic.from_buffer(buffer).lower()
-        text_present = "ascii" in buf_type or "text" in buf_type
-        html_present = "html" in buf_type
-        return text_present and (not html_present)
+        branched_suggestions = self.purl.suggest_license_files(purl)
+        for suggestions in branched_suggestions:
+            res = self.__lookup_gitrepo_url(purl, suggestions)
 
-    def validate(self, expr):
-        return self.fl.expression_license(expr, validations=[Validation.SPDX], update_dual=False)
+            if not res:
+                continue
+
+            # if a license has been identified,
+            # assume this is the branch to use (details can be found in res)
+            if res['identified_licenses']:
+                return res
+
+        # if no license found, return None (even if implicit)
+        return None
+
+    @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
+    def OBSOLETED_lookup_license_url(self, url, url_type):
+        print("REALLY! ... isn't this obsoleted???")
+        import sys
+        sys.exit(1)
+        self.__init_license_index()
+        lookup_url = None
+        res = lookup_url.lookup_license_url(url, url_type)
+
+        return res
+
+        logging.debug(f'LookupLicense:lookup_license_url {url}')
+        fixed_urls = self.__fix_url(url)
+        urls = [url, fixed_urls]
+        retriever = None
+
+        for _url in urls:
+            retrieved_result = retriever.lookup_license_urls(url)
+            decoded_content = retrieved_result['decoded_content']
+        res = self.lookup_license.lookup_license_text(decoded_content)
+        res['provided'] = retrieved_result['provided']
+        res['tried_urls'] = retrieved_result['tried_urls']
+
+        return res
