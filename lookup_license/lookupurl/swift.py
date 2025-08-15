@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Henrik Sandklef
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from lookup_license.lookupurl.lookupurl import LookupURL
 from lookup_license.lookupurl.gitrepo import GitRepo
 
@@ -163,21 +167,22 @@ class Swift(LookupURL):
         if not repo_data:
             return None
 
-        all_licenses = set()
-        for lic in licenses_from_config:
-            all_licenses.add(lic)
-
-        for lic in repo_data['identified_license']:
-            all_licenses.add(lic)
+        licenses_object = self.gitrepo.licenses([], repo_data)
+        version = ''
+        repositories = []
 
         repo_data['provided'] = url
-
         repo_data['meta'] = {}
         repo_data['meta']['url_type'] = 'gem'
         repo_data['meta']['config_details'] = data_suggestion.get('config_details', {})
+        repo_data['meta']['repository'] = ', '.join(repositories)
+        repo_data['details']['config_licenses'] = licenses_object['config_license']
+        repo_data['identified_license'] = licenses_object['identified_license']
+        repo_data['identified_license_string'] = licenses_object['identified_license_string']
 
-        repo_data['details']['config_licenses'] = licenses_from_config
+#        repo_data['details']['config_licenses'] = licenses_from_config
 
-        repo_data['identified_license'] = [LicenseDatabase.expression_license(x)['identified_license'] for x in all_licenses]
+ #       repo_data['identified_license'] = [LicenseDatabase.expression_license(x)['identified_license'] for x in all_licenses]
+  #      repo_data['identified_license_string'] = licenses_object['identified_license_string']
 
         return repo_data
