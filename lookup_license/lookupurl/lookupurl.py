@@ -93,4 +93,3 @@ class LookupURL:
             'success': success,
         }
         return res
-

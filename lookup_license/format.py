@@ -66,8 +66,7 @@ class TextFormatter(Formatter):
             return None, f'{exception}'
 
     def _add(self, title, data, key, store):
-        #if data.get(key):
-        store.append(f'{title:<20} {data.get(key,'')}')
+        store.append(f'{title:<20} {data.get(key, '')}')
 
     def format_lookup_urls(self, looked_up_urls, verbose=False):
         if not looked_up_urls:
@@ -89,12 +88,12 @@ class TextFormatter(Formatter):
                     self._add('Homepage:', config_details, 'homepage', ret)
 
                     if meta.get('repository'):
-                        ret.append(f'{"Repository:":<20} {meta.get("repository","")}')
+                        ret.append(f'{"Repository:":<20} {meta.get("repository", "")}')
                     elif 'repository' in config_details:
                         self._add('Repository:', config_details, 'repository', ret)
                     else:
                         ret.append(f'{"Repository:":<20}')
-                        
+
             orig_url_title = 'Original url:'
             ret.append(f'{orig_url_title:<20} {looked_up_urls["provided"]}')
             ret.append(f'{"License identified:":<20} {identified_license_string}')
@@ -108,5 +107,5 @@ class TextFormatter(Formatter):
                     for lic in config_licenses:
                         ret.append(f' * {lic["license"]} <-- {lic["url"]}')
             return '\n'.join(ret), None
-        
+
         return identified_license_string, None

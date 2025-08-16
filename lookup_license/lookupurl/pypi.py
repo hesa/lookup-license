@@ -6,7 +6,6 @@ from lookup_license.lookupurl.lookupurl import LookupURL
 from lookup_license.lookupurl.gitrepo import GitRepo
 
 from lookup_license.retrieve import Retriever
-from lookup_license.license_db import LicenseDatabase
 
 from packageurl import PackageURL
 
@@ -174,11 +173,11 @@ class Pypi(LookupURL):
 
         if not repo_data:
             repo_data = self.gitrepo.empty_data()
-        
+
         licenses_object = self.gitrepo.licenses(identified_pypi_data, repo_data)
         version = identified_pypi_data['config_details']['version']
         repositories = self.gitrepo.repositories_from_details(repo_data, version)
-            
+
         repo_data['provided'] = url
         repo_data['meta'] = {}
         repo_data['meta']['url_type'] = 'pypi'
@@ -188,5 +187,5 @@ class Pypi(LookupURL):
         repo_data['details']['config_licenses'] = licenses_object['config_license']
         repo_data['identified_license'] = licenses_object['identified_license']
         repo_data['identified_license_string'] = licenses_object['identified_license_string']
-        
+
         return repo_data

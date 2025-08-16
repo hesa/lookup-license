@@ -200,8 +200,7 @@ class GitRepo(LookupURL):
         ret['details']['config_licenses'] = licenses_object['config_license']
         ret['identified_license'] = licenses_object['identified_license']
         ret['identified_license_string'] = licenses_object['identified_license_string']
-        
-        
+
         return ret
 
     def empty_data(self):
@@ -217,9 +216,9 @@ class GitRepo(LookupURL):
         }
 
     def gitrepo_repo(self, url):
-        return ('/'.join(url.split('/')[:5]))        
+        return ('/'.join(url.split('/')[:5]))
 
-    def gitrepo_with_version(self, url, version): # TODO : WRITE TESTS
+    def gitrepo_with_version(self, url, version):
         if not url:
             return None
         if 'github.com' in url:
@@ -242,7 +241,7 @@ class GitRepo(LookupURL):
             __repo = self.gitrepo_with_version(orig_url, version)
             __repos.add(__repo)
         return list(__repos)
-        
+
     def licenses(self, config_data, repo_data):
         all_licenses = set()
 
@@ -250,7 +249,7 @@ class GitRepo(LookupURL):
             licenses_from_config = config_data['licenses']
         else:
             licenses_from_config = []
-            
+
         if licenses_from_config:
             for lic in licenses_from_config:
                 all_licenses.add(lic['license'])
@@ -260,19 +259,19 @@ class GitRepo(LookupURL):
                 all_licenses.add(lic)
 
         try:
-           identified_license = [LicenseDatabase.expression_license_identified(x) for x in all_licenses]
+            identified_license = [LicenseDatabase.expression_license_identified(x) for x in all_licenses]
         except ExpressionError:
-           identified_license = all_licenses
+            identified_license = all_licenses
 
         try:
-           identified_license_string = LicenseDatabase.summarize_license(all_licenses)
+            identified_license_string = LicenseDatabase.summarize_license(all_licenses)
         except ExpressionError:
-           identified_license_string = ', '.join(all_licenses)
-            
+            identified_license_string = ', '.join(all_licenses)
+
         return {
             'config_license': licenses_from_config,
             'repo_licenses': repo_data['identified_license'],
             'all': list(all_licenses),
             'identified_license': identified_license,
-            'identified_license_string': identified_license_string
+            'identified_license_string': identified_license_string,
         }

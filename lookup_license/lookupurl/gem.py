@@ -6,11 +6,9 @@ from lookup_license.lookupurl.lookupurl import LookupURL
 from lookup_license.lookupurl.gitrepo import GitRepo
 
 from lookup_license.retrieve import Retriever
-from lookup_license.license_db import LicenseDatabase
 from lookup_license.lookupurl.fixes import fix_url
 
 from packageurl import PackageURL
-
 
 import json
 import logging
@@ -202,6 +200,5 @@ class Gem(LookupURL):
         repo_data['details']['config_licenses'] = licenses_object['config_license']
         repo_data['identified_license'] = licenses_object['identified_license']
         repo_data['identified_license_string'] = licenses_object['identified_license_string']
-        
 
         return repo_data

@@ -22,7 +22,7 @@ class LicenseDatabase:
         __licenses = []
         for lic in list(set(licenses)):
             normalized = LicenseDatabase.expression_license_identified(lic)
-            __licenses.append(f' ( {normalized} ) ' )
+            __licenses.append(f' ( {normalized} ) ')
         __licenses_string = ' AND '.join(__licenses)
         return str(LicenseDatabase.simplify(__licenses_string))
 
@@ -35,5 +35,3 @@ class LicenseDatabase:
     @staticmethod
     def validate(expr):
         return LicenseDatabase.fl.expression_license(expr, validations=[Validation.SPDX], update_dual=False)
-
-    

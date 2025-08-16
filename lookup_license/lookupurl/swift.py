@@ -7,7 +7,6 @@ from lookup_license.lookupurl.gitrepo import GitRepo
 
 from packageurl import PackageURL
 from lookup_license.retrieve import Retriever
-from lookup_license.license_db import LicenseDatabase
 
 import json
 import logging
@@ -148,7 +147,6 @@ class Swift(LookupURL):
             data_suggestion = self._guess_urls(url)
 
         url_suggestions = data_suggestion['repo_suggestions']
-        licenses_from_config = data_suggestion['licenses']
 
         #
         # The 'urls' variable above contains suggestions for
@@ -168,7 +166,6 @@ class Swift(LookupURL):
             return None
 
         licenses_object = self.gitrepo.licenses([], repo_data)
-        version = ''
         repositories = []
 
         repo_data['provided'] = url
@@ -179,10 +176,5 @@ class Swift(LookupURL):
         repo_data['details']['config_licenses'] = licenses_object['config_license']
         repo_data['identified_license'] = licenses_object['identified_license']
         repo_data['identified_license_string'] = licenses_object['identified_license_string']
-
-#        repo_data['details']['config_licenses'] = licenses_from_config
-
- #       repo_data['identified_license'] = [LicenseDatabase.expression_license(x)['identified_license'] for x in all_licenses]
-  #      repo_data['identified_license_string'] = licenses_object['identified_license_string']
 
         return repo_data
