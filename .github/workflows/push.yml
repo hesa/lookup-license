@@ -18,7 +18,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python3 -m pip install --upgrade pip
+        #python3 -m pip install --upgrade pip
         apt install libicu-dev python3-icu pkg-config
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
