@@ -19,6 +19,7 @@ jobs:
     - name: Install dependencies
       run: |
         python3 -m pip install --upgrade pip
+        apt install libicu-dev python3-icu pkg-config
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
     - name: Build
@@ -28,8 +29,12 @@ jobs:
     - name: Test
       run: |
         #python3 -m unittest
-        PYTHONPATH=. tests/test-interactive.sh 1
-        PYTHONPATH=. pytest tests/test-lookup.py
+        PYTHONPATH=. tests/shell/test-interactive.sh 1
+        PYTHONPATH=. tests/shell/test-cli.sh 1
+        PYTHONPATH=. tests/shell/test-multiple.sh 1
+        PYTHONPATH=. pytest tests/python/test-lookup.py
+        PYTHONPATH=. pytest tests/python/test_purl.py
+        PYTHONPATH=. pytest tests/python/test_gitrepo.py
         #PYTHONPATH=. pytest tests/test-speed.py
       shell: bash
     - name: Publish Test Report
