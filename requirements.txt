@@ -6,6 +6,6 @@ cachetools
 scancode-toolkit
 foss-flame
 python-magic
-requests==2.32.0
-packageurl
+requests
+packageurl-python
 license_expression
