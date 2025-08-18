@@ -9,3 +9,4 @@ python-magic
 requests
 packageurl-python
 license_expression
+chardet==5.0.0
