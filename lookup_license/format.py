@@ -50,10 +50,14 @@ class TextFormatter(Formatter):
         if verbose:
             ret = ['License:     ']
             for _lic in lic['normalized']:
-                ret.append(f' * {_lic["license"]}  score:{_lic["score"]}')
+                if 'score' in _lic:
+                    score_str = f'  score:{_lic["score"]}'
+                else:
+                    score_str = ''
+                ret.append(f' * {_lic}{score_str}')
             ret.append(f'Ambiguities: {lic["ambiguities"]}')
         else:
-            ret = [", ".join([_lic['license'] for _lic in lic['normalized']])]
+            ret = [", ".join([_lic for _lic in lic['normalized']])]
         return '\n'.join(ret), None
 
     def format_error(self, exception, verbose=False):
