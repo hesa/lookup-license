@@ -56,7 +56,7 @@ class Purl(LookupURL):
         if version:
             url_parts = repo_url.split('/')
             version_prefix = qualifiers.get('version_prefix', '')
-            repo_url = f'{'/'.join(url_parts[:5])}/tree/{version_prefix}{version}'
+            repo_url = f'{"/".join(url_parts[:5])}/tree/{version_prefix}{version}'
 
         return repo_url
 
