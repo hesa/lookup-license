@@ -9,3 +9,4 @@ python-magic
 requests[use_chardet_on_py3]
 packageurl-python
 license_expression
+charset-normalizer==2.1.0
