@@ -142,7 +142,7 @@ class Gem(LookupURL):
             logging.info(f'suggested gem conf urls from http:: {gem_urls}')
         else:
             # TODO: read license from url # noqa: T101
-            new_url = url.replace('@', '/')
+            new_url = url.replace('@', '/versions/')
             new_url = new_url.replace('==', '/')
             gem_urls = [
                 f'https://rubygems.org/api/v2/rubygems/{new_url}.json',
