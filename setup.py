@@ -25,14 +25,14 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     license_files=('LICENSES/GPL-3.0-or-later.txt',),
     url="https://github.com/hesa/lookup-license",
-    packages=['lookup_license'],
+    packages=['lookup_license', 'lookup_license.lookupurl', ],
     entry_points={
         "console_scripts": [
             "lookup-license=lookup_license.__main__:main",
         ],
     },
     package_data={
-        'scarfer': ['var/*'],
+        'lookup_license': ['data/*'],
     },
     install_requires=requirements,
     extras_require={
@@ -52,6 +52,8 @@ setuptools.setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3",
         "Topic :: Software Development :: Quality Assurance",
     ],
