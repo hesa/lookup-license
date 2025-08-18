@@ -19,7 +19,7 @@ jobs:
     - name: Install dependencies
       run: |
         #python3 -m pip install --upgrade pip
-        sudo apt-get install libicu-dev python3-icu pkg-config
+        sudo apt-get install libicu-dev pkg-config
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
     - name: Build
