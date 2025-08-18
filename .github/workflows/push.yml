@@ -20,7 +20,7 @@ jobs:
     - name: Install dependencies
       run: |
         #python3 -m pip install --upgrade pip
-        sudo apt-get install libicu-dev pkg-config
+        sudo apt-get install libicu-dev pkg-config python3-chardet
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
     - name: Build
