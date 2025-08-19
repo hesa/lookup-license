@@ -46,42 +46,60 @@ class Swift(LookupURL):
 
         json_data = json.loads(decoded_content)
 
-        purl_object = PackageURL.from_string(url)
-
         # TODO: use the API to get the package meta data and from that the licenses # noqa: T101
         # * https://swiftpackageindex.com/<org>/collection.json
         # * licenses should be returned, see below
         # Note: only github.com repos are indexed at swiftpackageindex
 
-        # if name in purl
-        if purl_object.name:
+        # If PURL url
+        if 'pkg:' in url:
+            purl_object = PackageURL.from_string(url)
 
-            # if namespace in purl
-            if purl_object.namespace:
-                reg_exp = f'https://github.com/{purl_object.namespace}/{purl_object.name}'
-            else:
-                reg_exp = f'https://github.com/{purl_object.name}'
+            # if name in purl
+            if purl_object.name:
 
-            # identify the urls matching the name
-            # if 1 is found, return that one
-            # * the above is true for https://swiftpackageindex.com/lokalise/lokalise-ios-framework
-            urls = [pkg for pkg in json_data if reg_exp in pkg]
-            if len(urls) == 0:
-                logging.warning(f'Could not identify a repository for {url}')
+                # if namespace in purl
+                if purl_object.namespace:
+                    reg_exp = f'https://github.com/{purl_object.namespace}/{purl_object.name}'
+                else:
+                    reg_exp = f'https://github.com/{purl_object.name}'
 
-            if len(urls) == 1:
-                pass
-            else:
-                logging.warning(f'Could not identify one single repository for {url}. Found {len(urls)} urls: {urls}')
-
-            if not urls:
-                return None
-
-            git_url = re.sub('.git$', '', urls[0])
             if purl_object.version and ('latest' != purl_object.version and 'unspecified' != purl_object.version):
-                git_url = f'{git_url}/tree/{purl_object.version}'
+                pkg_version = purl_object.version
             else:
-                git_url = git_url
+                pkg_version = None
+
+        # swift package name
+        else:
+            reg_exp = url
+            if '@' in url:
+                splits = url.split('@')
+                pkg_version = splits[1]
+                reg_exp = f'/{splits[0]}'
+            else:
+                pkg_version = None
+
+        # identify the urls matching the name
+        # if 1 is found, return that one
+        # * the above is true for https://swiftpackageindex.com/lokalise/lokalise-ios-framework
+        urls = [pkg for pkg in json_data if reg_exp in pkg]
+        if len(urls) == 0:
+            logging.warning(f'Could not identify a repository for {url}')
+
+        if len(urls) == 1:
+            pass
+        else:
+            logging.warning(f'Could not identify one single repository for {url}. Found {len(urls)} urls: {urls}')
+
+        if not urls:
+            return None
+
+        git_url = re.sub('.git$', '', urls[0])
+        if pkg_version and ('latest' != pkg_version and 'unspecified' != pkg_version):
+            git_url = f'{git_url}/tree/{pkg_version}'
+        else:
+            git_url = git_url
+
         config_details = {
             'config_url': packages_url,
             'homepage': '',
@@ -147,7 +165,6 @@ class Swift(LookupURL):
             data_suggestion = self._guess_urls(url)
 
         url_suggestions = data_suggestion['repo_suggestions']
-
         #
         # The 'urls' variable above contains suggestions for
         # repository urls. Loop through these and analyse them if data
