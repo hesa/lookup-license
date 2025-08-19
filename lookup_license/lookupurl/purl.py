@@ -60,40 +60,25 @@ class Purl(LookupURL):
 
         return repo_url
 
-    def OBSOLETE_guess_repo_url(self, purl):
+    def _guess_repo_url(self, purl):
         purl_object = PackageURL.from_string(purl)
         purl_name = purl_object.name
 
-        if purl_object.type == 'pypi':
-            print(" ---------------------------------- PYPI")
-
-        if purl_object.type == 'swift':
-            print(" ---------------------------------- 3")
-            pass
-        elif purl_object.type == 'github' or (purl_object.namespace and 'github' in purl_object.namespace):
-            print(" ---------------------------------- 1")
+        if purl_object.type == 'github' or (purl_object.namespace and 'github' in purl_object.namespace):
             return self._github_repo_url(purl)
         elif purl_object.type == 'pypi':
-            print(" ---------------------------------- PYPI here")
-            print(" ---------------------------------- PYPI " + purl)
             pypi_data = Pypi().lookup_url(purl)
-            print(" ---------------------------------- PYPI: " + pypi_data)
 
             if pypi_data:
                 return pypi_data
 
         else:
-            print(" ---------------------------------- 2")
             # try using purl2url
             repo_url = purl2url.get_repo_url(purl)
-
-            print(f'Purl type "{purl_object.type}" not supported: {purl_object}')
             if not repo_url:
                 raise Exception(f'Could not get repo url for {purl}')
             import sys
             sys.exit(1)
-        print("hat??")
-        print(str(purl_object))
         return f'github.com/{purl_object.namespace.replace("github.com/", "")}/{purl_name}'
 
     def repo_url(self, purl):
