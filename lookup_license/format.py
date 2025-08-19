@@ -47,17 +47,23 @@ class TextFormatter(Formatter):
         if not lic or (not lic.get('status')):
             return None, f'Could not identify license for {lic["provided"][:100]}.....'
 
+        ret = []
         if verbose:
-            ret = ['License:     ']
-            for _lic in lic['normalized']:
-                if 'score' in _lic:
-                    score_str = f'  score:{_lic["score"]}'
-                else:
-                    score_str = ''
-                ret.append(f' * {_lic}{score_str}')
-            ret.append(f'Ambiguities: {lic["ambiguities"]}')
+            ret.append('License:     ')
+        for _lic in lic['normalized']:
+            if lic['identification'] == 'flame':
+                score_str = ''
+                lic_str = _lic
+            if lic['identification'] == 'lookup-license':
+                lic_str = _lic['license']
+                score_str = f'  score:{_lic["score"]}'
+        if verbose:
+                ret.append(f' * {lic_str}{score_str}')
         else:
-            ret = [", ".join([_lic for _lic in lic['normalized']])]
+                ret.append(f'{lic_str}')
+        if verbose:
+            ret.append(f'Ambiguities: {lic["ambiguities"]}')
+
         return '\n'.join(ret), None
 
     def format_error(self, exception, verbose=False):
