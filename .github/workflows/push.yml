@@ -31,12 +31,9 @@ jobs:
       run: |
         #python3 -m unittest
         PYTHONPATH=. tests/shell/test-interactive.sh 1
-        PYTHONPATH=. tests/shell/test-cli.sh 1
+        PYTHONPATH=. tests/shell/test-cli.sh
         PYTHONPATH=. tests/shell/test-multiple.sh 1
-        PYTHONPATH=. pytest tests/python/test-lookup.py
-        PYTHONPATH=. pytest tests/python/test_purl.py
-        PYTHONPATH=. pytest tests/python/test_gitrepo.py
-        #PYTHONPATH=. pytest tests/test-speed.py
+        PYTHONPATH=. pytest tests/python/
       shell: bash
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@v2
