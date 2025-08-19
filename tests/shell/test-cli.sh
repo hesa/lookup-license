@@ -4,7 +4,34 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+#
+# script to verify against quite a few URLs
+# to reduce time in CI/CD at Github some limits are set
+# * if github and python 3.10 run only one test per url type
+# * if github and not python 3.10 exit 
+#
+
 DEBUG=True
+LIMITED_TEST=False
+
+if [ ! -z $GITHUB_ACTIONS ]
+then
+    PYTHON_3_10=$(python3 --version | grep -c 3.10)
+    if [ $PYTHON_3_10 -eq 1 ]
+    then
+        echo "Run inside Github and with Python 3.10 so run but with limited number of tests"
+        LIMITED_TEST=True
+    else
+        echo "Run inside Github but not Python 3.10 so exit with 0"
+        exit 0
+    fi
+elif [ "$1" = "--limited" ]
+then
+    LIMITED_TEST=True
+    echo "Limited test"
+#else
+#    echo "All tests"
+fi
 
 PYPI_PACKAGES=("pkg:pypi/boto3@1.35.99;Apache-2.0 AND License :: OSI Approved :: Apache Software License"
                "pkg:pypi/click@8.1.8;BSD-3-Clause AND License :: OSI Approved :: BSD License"
@@ -88,6 +115,11 @@ url_license_multi()
         do
             git_license_sub "${pre}${URL}${post}" "$EXPECTED_LICENSE" "$ARGS"
         done
+
+        if [ "$LIMITED_TEST" = "True" ]
+        then
+            break
+        fi
     done
 }
 
@@ -106,6 +138,11 @@ test_git_repo_licenses()
 
     # github
     url_license_multi "github.com/webfactory/ssh-agent/tree/v0.8.0" "MIT" " --gitrepo "
+    if [ "$LIMITED_TEST" = "True" ]
+    then
+        echo
+        return
+    fi
     url_license_multi "github.com/webfactory/ssh-agent"             "MIT" " --gitrepo "
     echo
 }
@@ -124,6 +161,10 @@ test_purl_swift_licenses()
         
         local PKG="$(basename $URL | sed 's,:,,g')"
         url_license "$PKG"    "$LIC" " --swift "
+        if [ "$LIMITED_TEST" = "True" ]
+        then
+            break
+        fi
     done
     echo
 }
@@ -143,6 +184,10 @@ test_purl_gem_licenses()
         
         local PKG="$(echo $URL | sed 's,pkg:[a-z]*/,,g')"
         url_license "$PKG"    "$LIC" " --gem "
+        if [ "$LIMITED_TEST" = "True" ]
+        then
+            break
+        fi
     done
 
     echo
@@ -163,6 +208,10 @@ test_purl_pypi_licenses()
         
         local PKG="$(echo $URL | sed 's,pkg:[a-z]*/,,g')"
         url_license "$PKG"    "$LIC" " --pypi "
+        if [ "$LIMITED_TEST" = "True" ]
+        then
+            break
+        fi
     done
 
  #   "pkg:pypi/click@8.1.8" "BSD-3-Clause" " --purl "
@@ -189,6 +238,10 @@ test_license_urls()
         local URL="$(echo $url_value | cut -d ";" -f 1)"
         local LIC="$(echo $url_value | cut -d ";" -f 2)"
         url_license "$URL"    "$LIC" " --url "
+        if [ "$LIMITED_TEST" = "True" ]
+        then
+            break
+        fi
     done
     echo
 }
@@ -209,6 +262,10 @@ test_license_texts()
         
         compare_exit "$ACTUAL" "$LIC" ""
         echo OK
+        if [ "$LIMITED_TEST" = "True" ]
+        then
+            break
+        fi
     done
     echo
 }
