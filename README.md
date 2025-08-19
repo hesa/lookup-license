@@ -8,13 +8,19 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 Python tool to identify license from license text or license names.
 
-With `lookup-license` you can lookup the license from:
+With `lookup-license` you can lookup licenses from:
 
 * text (e.g. an incorrect name such as "BSD3" or an entire license text)
 
 * file (e.g. "src/LICENSE.txt")
 
 * url (e.g. "https://github.com/hesa/lookup-license/blob/main/LICENSE")
+
+* repositories
+
+* package names
+
+* purls
 
 The first lookup takes a bit of time, due to initialization, so if you
 want to do a number of lookups you might want to use the interactive
@@ -63,7 +69,7 @@ If you want `lookup-license` to read the content and try to identify the license
 ### Interactively provide the file name
 
 ```
-lookup-license --file
+$ lookup-license --file
 Enter license file name and press enter.
 >>> LICENSE.txt
 CC-BY-4.0
@@ -72,7 +78,7 @@ CC-BY-4.0
 ### Provide the file name as an argument
 
 ```
-lookup-license --file LICENSE.txt
+$ lookup-license --file LICENSE.txt
 CC-BY-4.0
 ```
 
@@ -83,7 +89,7 @@ Same as described earlier with file names, if you pass a URL to `lookup-license`
 ### Interactively provide the URL
 
 ```
-lookup-license --url
+$ lookup-license --url
 Enter license URL name and press enter.
 >>> https://github.com/psf/requests/blob/main/LICENSE
 Apache-2.0
@@ -92,7 +98,7 @@ Apache-2.0
 ### Provide the URL as an argument
 
 ```
-lookup-license --url https://github.com/psf/requests/blob/main/LICENSE
+$ lookup-license --url https://github.com/psf/requests/blob/main/LICENSE
 Apache-2.0
 ```
 
@@ -101,7 +107,7 @@ Apache-2.0
 Here is an example session for looking up the text `mit` followed the URL `https://github.com/psf/requests/blob/main/LICENSE`:
 
 ```
-lookup-license --shell
+$ lookup-license --shell
 Welcome to the LookupLicense shell. Type help or ? to list commands.
 
 >>> text 
@@ -114,6 +120,17 @@ Enter license URL name and press enter.
 ['Apache-2.0']
 ```
 
+## Looking up locense for packages and repositories
+
+With `lookup-license` you can lookup the license for packages and repositories using:
+
+* Purls (Gem, github, Pypi, Swift)
+
+* Gitrepo (github, gitlab, freedesktop)
+
+* Package names (Gem, github, Pypi, Swift)
+
+See [Purl and package managers](PURL_AND_MISC.md) for more information.
 
 # Acknowledgements
 

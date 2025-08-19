@@ -23,3 +23,7 @@ Files: .bumpversion.cfg
 Copyright: 2024 Henrik Sandklef <hesa@sandklef.com>
 License: CC-BY-4.0
 
+Files: lookup_license/data/url-fixes.json
+Copyright: 2025 Henrik Sandklef <hesa@sandklef.com>
+License: CC-BY-4.0
+

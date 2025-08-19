@@ -4,4 +4,4 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-PYTHONPATH=. ./lookup_license/__main__.py $*
+PYTHONPATH=${PYTHONPATH}:. ./lookup_license/__main__.py $*

@@ -8,8 +8,10 @@ import json
 import pytest
 
 from lookup_license.lookuplicense import LookupLicense
+from lookup_license.lookupurl.factory import LookupURLFactory
 
 ll = LookupLicense()
+lu = LookupURLFactory.lookupurl('url')
 
 
 # Lookup license text
@@ -61,20 +63,24 @@ def test_lookup_license_file_bad():
         res = ll.lookup_license_file('tests/licenses/oh-no-this-does-not-exist.LICENSE')
         
 
-
+def _build_raw(url):
+    raw_url = LookupURLFactory.lookupurl('gitrepo').raw_content_url(url)
+    return {
+        'license_raw_url': raw_url,
+        'original_url': url
+    }
+    
+        
 # Lookup license url
 # 
 def test_lookup_license_url_good():
-    res = ll.lookup_license_url('https://raw.githubusercontent.com/hesa/lookup-license/main/LICENSES/GPL-3.0-or-later.txt')
-    assert res['normalized'][0]['license'] == 'GPL-3.0-only'
-
-def test_lookup_license_url_html():
-    res = ll.lookup_license_url('https://github.com/hesa/lookup-license/blob/main/LICENSES/GPL-3.0-or-later.txt')
-    assert res['normalized'][0]['license'] == 'GPL-3.0-only'
+    
+    res = lu.lookup_url('https://raw.githubusercontent.com/hesa/lookup-license/main/LICENSES/GPL-3.0-or-later.txt')
+    assert res['identified_license'][0] == 'GPL-3.0-only'
 
 def test_lookup_license_url_bad():
-    res = ll.lookup_license_url('https://github.com/hesa/lookup-license/blob/main/LICENSES/does-not-exist.txt')
-    assert res['normalized'] == None
+    res = lu.lookup_url('https://github.com/hesa/lookup-license/blob/main/LICENSES/does-not-exist.txt')
+    assert res['success'] == False
     
 
 
