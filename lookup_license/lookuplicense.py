@@ -98,7 +98,7 @@ class LookupLicense():
                 urls.append(f'{url}/src/branch/{branch}/{license_file}')
         return urls
 
-    def __fix_url(self, url):
+    def OBSOLETED___fix_url(self, url):
         if "github" in url:
             url_split = url.split('/')
             org = url_split[3]
