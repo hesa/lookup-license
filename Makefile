@@ -14,9 +14,8 @@ python: py-test py-lint
 py-test: 
 	PYTHONPATH=. tests/shell/test-interactive.sh 1
 	PYTHONPATH=. tests/shell/test-cli.sh 1
-	PYTHONPATH=. pytest tests/python/test-lookup.py
-#	PYTHONPATH=. pytest tests/python/test-speed.py
-	PYTHONPATH=. pytest tests/python/test_gitrepo.py
+	PYTHONPATH=. tests/shell/test-multiple.sh 1
+	PYTHONPATH=. pytest tests/python/
 	@echo python tests passed
 
 py-lint:
@@ -52,3 +51,4 @@ clean:
 	rm -fr *.egg*
 	rm -fr dist
 	rm -fr build
+	rm -fr .pytest_cache
