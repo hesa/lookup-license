@@ -125,7 +125,6 @@ test_purl_swift_licenses()
         local PKG="$(basename $URL | sed 's,:,,g')"
         url_license "$PKG"    "$LIC" " --swift "
     done
-exit
     echo
 }
 
