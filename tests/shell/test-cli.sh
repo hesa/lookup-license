@@ -121,8 +121,11 @@ test_purl_swift_licenses()
         local URL="$(echo $swift_value | cut -d ";" -f 1)"
         local LIC="$(echo $swift_value | cut -d ";" -f 2)"
         url_license "$URL"    "$LIC" " --purl "
+        
+        local PKG="$(basename $URL | sed 's,:,,g')"
+        url_license "$PKG"    "$LIC" " --swift "
     done
-
+exit
     echo
 }
 
@@ -138,6 +141,9 @@ test_purl_gem_licenses()
         local URL="$(echo $gem_value | cut -d ";" -f 1)"
         local LIC="$(echo $gem_value | cut -d ";" -f 2)"
         url_license "$URL"    "$LIC" " --purl "
+        
+        local PKG="$(echo $URL | sed 's,pkg:[a-z]*/,,g')"
+        url_license "$PKG"    "$LIC" " --gem "
     done
 
     echo
@@ -155,35 +161,15 @@ test_purl_pypi_licenses()
         local URL="$(echo $pypi_value | cut -d ";" -f 1)"
         local LIC="$(echo $pypi_value | cut -d ";" -f 2)"
         url_license "$URL"    "$LIC" " --purl "
+        
+        local PKG="$(echo $URL | sed 's,pkg:[a-z]*/,,g')"
+        url_license "$PKG"    "$LIC" " --pypi "
     done
 
  #   "pkg:pypi/click@8.1.8" "BSD-3-Clause" " --purl "
     echo
 }
 
-test_pypi_licenses()
-{
-    echo "Check Pypi"
-
-    # purl / pypi
-    for i in ${!PYPI_PACKAGES[@]}
-    do
-        pypi_value=${PYPI_PACKAGES[$i]}
-        local URL="$(echo $pypi_value | cut -d ";" -f 1)"
-        local LIC="$(echo $pypi_value | cut -d ";" -f 2)"
-        url_license "$URL"    "$LIC" " --pypi "
-    done
-
- #   "pkg:pypi/click@8.1.8" "BSD-3-Clause" " --purl "
-    echo
-}
-
-
-test_purl_licenses()
-{
-    #test_purl_swift_licenses
-    test_purl_pypi_licenses
-}
 
 test_license_url()
 {
@@ -228,10 +214,9 @@ test_license_texts()
     echo
 }
 
+test_purl_pypi_licenses
+test_purl_swift_licenses
+test_purl_gem_licenses
 test_license_urls
 test_license_texts
 test_git_repo_licenses
-test_purl_licenses
-test_pypi_licenses
-test_purl_swift_licenses
-test_purl_gem_licenses
