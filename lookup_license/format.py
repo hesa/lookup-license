@@ -57,9 +57,9 @@ class TextFormatter(Formatter):
             if lic['identification'] == 'lookup-license':
                 lic_str = _lic['license']
                 score_str = f'  score:{_lic["score"]}'
-        if verbose:
+            if verbose:
                 ret.append(f' * {lic_str}{score_str}')
-        else:
+            else:
                 ret.append(f'{lic_str}')
         if verbose:
             ret.append(f'Ambiguities: {lic["ambiguities"]}')
