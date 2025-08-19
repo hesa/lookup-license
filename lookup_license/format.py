@@ -76,7 +76,7 @@ class TextFormatter(Formatter):
             return None, f'{exception}'
 
     def _add(self, title, data, key, store):
-        store.append(f'{title:<20} {data.get(key, '')}')
+        store.append(f'{title:<20} {data.get(key, ""}')
 
     def format_lookup_urls(self, looked_up_urls, verbose=False):
         if not looked_up_urls:
