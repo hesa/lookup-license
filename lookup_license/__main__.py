@@ -14,6 +14,8 @@ from lookup_license.lookuplicense import LicenseTextReader
 from lookup_license.lookupurl.factory import LookupURLFactory
 from lookup_license.ll_shell import LookupLicenseShell
 from lookup_license.format import FormatterFactory
+from lookup_license.cache import LookupLicenseCache
+
 import lookup_license.config
 
 def get_parser():
@@ -37,6 +39,11 @@ def get_parser():
     parser.add_argument('-of', '--output-format',
                         type=str,
                         default='text')
+
+    parser.add_argument('-nc', '--no-cache',
+                        action='store_true',
+                        help='don±\'t use cache ',
+                        default=False)
 
     parser.add_argument('-f', '--file',
                         action='store_true',
@@ -150,6 +157,10 @@ def main():
     if args.verbose > 2:
         logging.basicConfig(force=True, level=logging.DEBUG)
 
+    if args.no_cache:
+        LookupLicenseCache().disable()
+        
+        
     ll = LookupLicense()
 
     try:
