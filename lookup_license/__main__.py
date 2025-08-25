@@ -45,6 +45,16 @@ def get_parser():
                         help='don±\'t use cache ',
                         default=False)
 
+    parser.add_argument('--clear-cache',
+                        action='store_true',
+                        help='clear the cache ',
+                        default=False)
+
+    parser.add_argument('-uc', '--update-cache',
+                        action='store_true',
+                        help='if the url is already in the cache, update with a new value. This will automatically disable using the cached values',
+                        default=False)
+
     parser.add_argument('-f', '--file',
                         action='store_true',
                         help='read license from file',
@@ -157,10 +167,16 @@ def main():
     if args.verbose > 2:
         logging.basicConfig(force=True, level=logging.DEBUG)
 
-    if args.no_cache:
+    if args.clear_cache:
+        LookupLicenseCache().clear()
+        logging.info('Cache cleared')
+        sys.exit(0)
+
+    if args.update_cache:
+        LookupLicenseCache().set_update_mode(args.update_cache)
+    elif args.no_cache:
         LookupLicenseCache().disable()
-        
-        
+
     ll = LookupLicense()
 
     try:
