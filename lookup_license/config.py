@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-lookup_license_version = "0.1.18"
+lookup_license_version = "0.1.19"
 
 default_minimum_score = 0.9
 
