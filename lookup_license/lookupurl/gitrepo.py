@@ -174,7 +174,7 @@ class GitRepo(LookupURL):
                 suggestions.append(self._suggest_license_files(repo_url, url_source, branch))
         return suggestions
 
-    def lookup_url(self, url):
+    def lookup_url_impl(self, url):
         if url.startswith('pkg:'):
             # purl
             purl_object = PackageURL.from_string(url)

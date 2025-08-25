@@ -92,7 +92,7 @@ class Purl(LookupURL):
 
         return None
 
-    def lookup_url(self, url):
+    def lookup_url_impl(self, url):
         logging.debug('Purl: lookup_url')
 
         purl_handler = self._purl_handler(url)
