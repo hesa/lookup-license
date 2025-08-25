@@ -13,4 +13,4 @@ packageurl-python
 license_expression
 #charset-normalizer==2.1.0
 diskcache
-packageurl
+packageurl-python
