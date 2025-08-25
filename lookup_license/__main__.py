@@ -42,7 +42,7 @@ def get_parser():
 
     parser.add_argument('-nc', '--no-cache',
                         action='store_true',
-                        help='don±\'t use cache ',
+                        help='don\'t use cache ',
                         default=False)
 
     parser.add_argument('--clear-cache',
