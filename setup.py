@@ -28,7 +28,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     license_files=('LICENSES/GPL-3.0-or-later.txt',),
     url="https://github.com/hesa/lookup-license",
-    packages=['lookup_license', 'lookup_license.lookupurl', ],
+    packages=['lookup_license', 'lookup_license.lookupurl'],
     entry_points={
         "console_scripts": [
             "lookup-license=lookup_license.__main__:main",
