@@ -4,6 +4,7 @@
 
 from lookup_license.lookuplicense import LookupLicense
 from lookup_license.retrieve import Retriever
+from lookup_license.cache import LookupLicenseCache
 
 import logging
 
@@ -14,6 +15,18 @@ class LookupURL:
         self.lookup_license = LookupLicense()
 
     def lookup_url(self, url):
+        try:
+            return LookupLicenseCache().get(url)
+        except Exception as e:
+            logging.debug(f'lookup_url: failed to get data from cache for {url}, {e}')
+
+        ret = self.lookup_url_impl(url)
+        logging.debug(f'add to cache: {url}')
+        LookupLicenseCache().add(url, ret)
+
+        return ret
+
+    def lookup_url_impl(self, url):
         return self.lookup_license_urls(url, [[url]])
 
     def lookup_license_urls(self, url, suggestions):

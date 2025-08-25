@@ -155,7 +155,7 @@ class Swift(LookupURL):
             'repo_suggestions': url_suggestions,
         }
 
-    def lookup_url(self, url):
+    def lookup_url_impl(self, url):
         # Try identifying the purl in swiftpackageindex.com
         swiftpackageindex_data = self._try_swiftpackageindex(url)
         if swiftpackageindex_data:

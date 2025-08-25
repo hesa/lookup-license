@@ -113,7 +113,7 @@ class Gem(LookupURL):
 
         return json_data['version']
 
-    def lookup_url(self, url):
+    def lookup_url_impl(self, url):
 
         url = url.strip('/')
 

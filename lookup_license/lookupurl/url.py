@@ -14,7 +14,7 @@ class Url(LookupURL):
         self.gitrepo = GitRepo()
         super().__init__()
 
-    def lookup_url(self, url):
+    def lookup_url_impl(self, url):
         urls = {
             'license_raw_url': self.gitrepo.raw_content_url(url),
             'original_url': url,

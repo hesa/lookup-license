@@ -14,6 +14,8 @@ from lookup_license.lookuplicense import LicenseTextReader
 from lookup_license.lookupurl.factory import LookupURLFactory
 from lookup_license.ll_shell import LookupLicenseShell
 from lookup_license.format import FormatterFactory
+from lookup_license.cache import LookupLicenseCache
+
 import lookup_license.config
 
 def get_parser():
@@ -37,6 +39,21 @@ def get_parser():
     parser.add_argument('-of', '--output-format',
                         type=str,
                         default='text')
+
+    parser.add_argument('-nc', '--no-cache',
+                        action='store_true',
+                        help='don\'t use cache ',
+                        default=False)
+
+    parser.add_argument('--clear-cache',
+                        action='store_true',
+                        help='clear the cache ',
+                        default=False)
+
+    parser.add_argument('-uc', '--update-cache',
+                        action='store_true',
+                        help='if the url is already in the cache, update with a new value. This will automatically disable using the cached values',
+                        default=False)
 
     parser.add_argument('-f', '--file',
                         action='store_true',
@@ -149,6 +166,16 @@ def main():
         logging.basicConfig(force=True, level=logging.INFO)
     if args.verbose > 2:
         logging.basicConfig(force=True, level=logging.DEBUG)
+
+    if args.clear_cache:
+        LookupLicenseCache().clear()
+        logging.info('Cache cleared')
+        sys.exit(0)
+
+    if args.update_cache:
+        LookupLicenseCache().set_update_mode(args.update_cache)
+    elif args.no_cache:
+        LookupLicenseCache().disable()
 
     ll = LookupLicense()
 
