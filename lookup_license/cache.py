@@ -13,7 +13,7 @@ class LookupLicenseCache():
         logging.debug('LookupLicenseCache _init_cache')
         self.cache = Cache(f'{Path.home()}/.ll/')
         self.enabled = True
-        self.update_mode = True
+        self.update_mode = update
 
     def set_update_mode(self, enable_update=True):
         self.update_mode = enable_update
@@ -26,7 +26,9 @@ class LookupLicenseCache():
 
     def add(self, key, value):
         if not self.enabled:
-            logging.debug("LookupLicenseCache is disabled, will not store ")
+            logging.debug(f'LookupLicenseCache is disabled, will not store {key}')
+            return
+        
         logging.debug(f'LookupLicenseCache add {key}')
 
         if not self.cache.add(key, value):
