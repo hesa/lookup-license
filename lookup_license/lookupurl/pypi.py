@@ -4,6 +4,8 @@
 
 from lookup_license.lookupurl.lookupurl import LookupURL
 from lookup_license.lookupurl.gitrepo import GitRepo
+from lookup_license.lookupurl.clearlydefined import ClearlyDefined
+from lookup_license.utils import get_keypath
 
 from lookup_license.retrieve import Retriever
 
@@ -11,6 +13,7 @@ from packageurl import PackageURL
 
 import json
 import logging
+import re
 
 class Pypi(LookupURL):
 
@@ -19,7 +22,7 @@ class Pypi(LookupURL):
         self.gitrepo = GitRepo()
         super().__init__()
 
-    def _try_pypi_config_url(self, pypi_url):
+    def _try_pypi_package_url(self, pypi_url):
         retriever = Retriever()
         retrieved_result = retriever.download_url(pypi_url)
         success = retrieved_result['success']
@@ -31,7 +34,7 @@ class Pypi(LookupURL):
         #
         # Handle classifiers (in pypi JSON data)
         #
-        licenses_from_config = []
+        licenses_from_package = []
         for classifier in json_data['info']['classifiers']:
             if 'license' in classifier.lower():
                 license_object = {
@@ -39,7 +42,7 @@ class Pypi(LookupURL):
                     'section': 'info.classifiers',
                     'license': classifier,
                 }
-                licenses_from_config.append(license_object)
+                licenses_from_package.append(license_object)
 
         #
         # Handle license variable (in pypi JSON data)
@@ -51,7 +54,7 @@ class Pypi(LookupURL):
                 'section': 'info.license',
                 'license': license_var,
             }
-            licenses_from_config.append(license_object)
+            licenses_from_package.append(license_object)
         #
         # Identify source code repository
         #
@@ -76,19 +79,20 @@ class Pypi(LookupURL):
             if inner_json_data:
                 repo_suggestions.append({
                     'repository': inner_json_data,
-                    'config_url': pypi_url,
-                    'config_path': complete_path,
+                    'package_url': pypi_url,
+                    'package_path': complete_path,
                 })
         repo_url = self._get_pypi_repo(json_data, JSON_PATHS)
         if not repo_url:
             repo_url = ''
 
-        homepage = self._get_key('info.home_page', json_data)
-        name = self._get_key('info.name', json_data)
-        version = self._get_key('info.version', json_data)
+        homepage = get_keypath(json_data, 'info.home_page')
+        name = get_keypath(json_data, 'info.name')
+        version = get_keypath(json_data, 'info.version')
 
-        config_details = {
-            'config_url': pypi_url,
+        package_details = {
+            'package_url': pypi_url,
+            'package_type': self.name(),
             'homepage': homepage,
             'name': name,
             'version': version,
@@ -96,12 +100,12 @@ class Pypi(LookupURL):
         }
 
         return {
-            'licenses': licenses_from_config,
+            'licenses': licenses_from_package,
             'repo_suggestions': repo_suggestions,
-            'config_details': config_details,
+            'package_details': package_details,
         }
 
-    def _get_key(self, path, data):
+    def OBSOLETE_get_key(self, path, data):
         inner_data = data
         for sub_path in path.split('.'):
             if sub_path in inner_data:
@@ -112,15 +116,46 @@ class Pypi(LookupURL):
 
     def _get_pypi_repo(self, paths, data):
         for path in paths:
-            _data = self._get_key(path, data)
+            _data = get_keypath(data, path)
             if _data:
                 return _data
 
-    def lookup_url_impl(self, url):
+    def lookup_providers_impl(self, url, version=None):
+        providers = {}
+
+        #
+        # ClearlyDefined
+        #
+        cd = ClearlyDefined()
+        if 'https://pypi.org' in url:
+            # Create ClearlyDefined coordinate from pypi path
+            stripped_url = re.sub(r'/json[/]*$', '', url)
+            stripped_url = re.sub(r'^http[s]*://pypi.org/pypi/', '', stripped_url)
+            coord_url = f'pkg:pypi/{stripped_url.replace("/", "@")}'
+    
+            providers[cd.name()] = cd.lookup_license(coord_url)
+        elif url.startswith('pkg:'):
+            # purl is supported by clearlydefined, so just pass the url as it is
+            providers[cd.name()] = cd.lookup_license(url)
+        else:
+            # Create Purl coordinate from pypi package name
+            stripped_url = re.sub(r'^[/]*pypi/', '', url)
+            splits = stripped_url.split('@')
+            pkg_name = splits[0]
+            try:
+                pkg_version = splits[1]
+            except:
+                pkg_version = version
+            providers[cd.name()] = cd.lookup_license_package(url, 'pypi', 'pypi', pkg_name, pkg_version)
+
+        return providers
+
+    def lookup_package(self, url):
 
         url = url.strip('/')
 
         if url.startswith('pkg:'):
+            url_type = 'purl'
             # purl
             purl_object = PackageURL.from_string(url)
             pypi_urls = []
@@ -129,13 +164,15 @@ class Pypi(LookupURL):
             else:
                 pypi_urls.append(f'https://pypi.org/pypi/{purl_object.name}/json')
         elif url.startswith('http'):
+            url_type = 'https'
             # https
             pypi_urls = [
-                url,
                 f'{url}/json',
                 f'{url}/json'.replace('/project/', '/pypi/'),
+                url,
             ]
         else:
+            url_type = 'package-name'
             new_url = url.replace('@', '/')
             new_url = new_url.replace('==', '/')
             pypi_urls = [
@@ -147,45 +184,50 @@ class Pypi(LookupURL):
         # scrape the configuration data and the repos suggested
         identified_pypi_data = None
         for pypi_url in pypi_urls:
-            pypi_data = self._try_pypi_config_url(pypi_url)
+            pypi_data = self._try_pypi_package_url(pypi_url)
             if pypi_data:
                 # this pypi url had data
                 # use the data below
                 identified_pypi_data = pypi_data
                 break
-        if not identified_pypi_data:
-            # TODO: add return data # noqa: T101
+
+#        if identified_pypi_data:
+#            version = identified_pypi_data['package_details']['version']
+#        else:
+#            version = None
+
+        print("APA: " + str(identified_pypi_data))
+        return identified_pypi_data
+
+    def lookup_providers(self, url, version):
+        # Identify licenses at providers
+        print(f'lookup_providers {url}, {version}')
+        providers = self.lookup_providers_impl(url, version)
+        return providers
+
+    def name(self):
+        return 'Pypi'
+    
+    def lookup_url_impl(self, url, package_data=None, providers_data=None):
+        repo_data = None
+        
+        if not package_data:
             return None
+
+        package_details = package_data['package_details']
 
         #
         # The data above contains suggestions for repository
         # urls. Loop through these and analyse them if data is found,
         # use the data from that repo
-        uniq_repos = set([repo['repository'] for repo in identified_pypi_data['repo_suggestions']]) # noqa: C403
+        uniq_repos = set([repo['repository'] for repo in package_data['repo_suggestions']]) # noqa: C403
         repo_data = None
         for repo in uniq_repos:
             repo_data = self.gitrepo.lookup_url(repo)
-            success = repo_data['success']
+            success = repo_data['url_data']['success']
             if success:
                 break
             else:
                 repo_data = None
-
-        if not repo_data:
-            repo_data = self.gitrepo.empty_data()
-
-        licenses_object = self.gitrepo.licenses(identified_pypi_data, repo_data)
-        version = identified_pypi_data['config_details']['version']
-        repositories = self.gitrepo.repositories_from_details(repo_data, version)
-
-        repo_data['provided'] = url
-        repo_data['meta'] = {}
-        repo_data['meta']['url_type'] = 'pypi'
-        repo_data['meta']['config_details'] = identified_pypi_data['config_details']
-        repo_data['meta']['repository'] = ', '.join(repositories)
-        repo_data['details']['suggestions'].append([pypi_url])
-        repo_data['details']['config_licenses'] = licenses_object['config_license']
-        repo_data['identified_license'] = licenses_object['identified_license']
-        repo_data['identified_license_string'] = licenses_object['identified_license_string']
 
         return repo_data
