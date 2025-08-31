@@ -25,18 +25,18 @@ class ClearlyDefined(LicenseProvider):
         return coord_url
         
     def lookup_license_package_impl(self, orig_url, pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers=None, pkg_subpath=None):
-        #if pkg_type = 'pkg'
-        print("package_impl :) :)")
-        coordinates = f'{pkg_type}/{pkg_namespace}/-/{pkg_name}/{pkg_version}'
+        if pkg_version:
+            pkg_version_str = f'/{pkg_version}'
+        else:
+            pkg_version_str = ''
+        coordinates = f'{pkg_type}/{pkg_namespace}/-/{pkg_name}{pkg_version_str}'
         coord_url = f'https://api.clearlydefined.io/definitions/{coordinates}'
-        print("coord_url: " + str(coord_url))
         return self.lookup_license_impl(coord_url)
         
         
     def lookup_license_impl(self, url):
         retriever = Retriever()
         error_msg = None
-        print("HERE I AM ")
         if url.startswith('pkg:'):
             # Try url as a purl
             try:
@@ -57,9 +57,9 @@ class ClearlyDefined(LicenseProvider):
         else:
             success = False
             error_msg = f'Coult not convert {url} to a coordinate.'
+
         if not success:
             identified_license = None
-            coord_url = None
         else:
             decoded_content = retrieved_result['decoded_content']
             json_data = json.loads(decoded_content)
@@ -74,7 +74,7 @@ class ClearlyDefined(LicenseProvider):
                 logging.debug(f'Failed getting data from clearlydefined, with "{key}" out of {LICENSE_EXPRESSION_PATH}')
                 error_msg = f'Failed getting data from clearlydefined, with "{key}" out of {LICENSE_EXPRESSION_PATH}'
                 identified_license = None
-                coord_url = None
+                #coord_url = json_data
 
         ret = {
             'license': identified_license,
