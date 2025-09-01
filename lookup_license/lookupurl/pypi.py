@@ -9,7 +9,7 @@ from lookup_license.utils import get_keypath
 
 from lookup_license.retrieve import Retriever
 
-from packageurl import PackageURL
+from packageurl import PackageURL  # noqa: I900
 
 import json
 import logging
@@ -132,7 +132,7 @@ class Pypi(LookupURL):
             stripped_url = re.sub(r'/json[/]*$', '', url)
             stripped_url = re.sub(r'^http[s]*://pypi.org/pypi/', '', stripped_url)
             coord_url = f'pkg:pypi/{stripped_url.replace("/", "@")}'
-    
+
             providers[cd.name()] = cd.lookup_license(coord_url)
         elif url.startswith('pkg:'):
             # purl is supported by clearlydefined, so just pass the url as it is
@@ -144,7 +144,7 @@ class Pypi(LookupURL):
             pkg_name = splits[0]
             try:
                 pkg_version = splits[1]
-            except:
+            except Exception:
                 pkg_version = version
             providers[cd.name()] = cd.lookup_license_package(url, 'pypi', 'pypi', pkg_name, pkg_version)
 
@@ -155,7 +155,6 @@ class Pypi(LookupURL):
         url = url.strip('/')
 
         if url.startswith('pkg:'):
-            url_type = 'purl'
             # purl
             purl_object = PackageURL.from_string(url)
             pypi_urls = []
@@ -164,15 +163,12 @@ class Pypi(LookupURL):
             else:
                 pypi_urls.append(f'https://pypi.org/pypi/{purl_object.name}/json')
         elif url.startswith('http'):
-            url_type = 'https'
-            # https
             pypi_urls = [
                 f'{url}/json',
                 f'{url}/json'.replace('/project/', '/pypi/'),
                 url,
             ]
         else:
-            url_type = 'package-name'
             new_url = url.replace('@', '/')
             new_url = new_url.replace('==', '/')
             pypi_urls = [
@@ -191,11 +187,6 @@ class Pypi(LookupURL):
                 identified_pypi_data = pypi_data
                 break
 
-#        if identified_pypi_data:
-#            version = identified_pypi_data['package_details']['version']
-#        else:
-#            version = None
-
         return identified_pypi_data
 
     def lookup_providers(self, url, version):
@@ -205,14 +196,12 @@ class Pypi(LookupURL):
 
     def name(self):
         return 'Pypi'
-    
+
     def lookup_url_impl(self, url, package_data=None, providers_data=None):
         repo_data = None
-        
+
         if not package_data:
             return None
-
-        package_details = package_data['package_details']
 
         #
         # The data above contains suggestions for repository
