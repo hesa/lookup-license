@@ -1,6 +1,3 @@
-from lookup_license.lookupurl.lookupurl import LookupURL
-
-
 class LicenseProvider():
 
     def name(self):
@@ -20,4 +17,3 @@ class LicenseProvider():
         data['url'] = orig_url
         data['status'] = data['license'] is not None
         return data
-    
