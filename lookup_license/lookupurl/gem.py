@@ -4,11 +4,12 @@
 
 from lookup_license.lookupurl.lookupurl import LookupURL
 from lookup_license.lookupurl.gitrepo import GitRepo
+from lookup_license.lookupurl.clearlydefined import ClearlyDefined
 
 from lookup_license.retrieve import Retriever
 from lookup_license.lookupurl.fixes import fix_url
 
-from packageurl import PackageURL
+from packageurl import PackageURL  # noqa: I900
 
 import json
 import logging
@@ -165,18 +166,21 @@ class Gem(LookupURL):
 
         return identified_gem_data
 
-    def lookup_providers_impl(self, url, version=None):
+    def lookup_providers(self, url, version=None):
+        providers = {}
+        cd = ClearlyDefined()
+        if url.startswith('pkg:'):
+            # purl is supported by clearlydefined, so just pass the url as it is
+            providers[cd.name()] = cd.lookup_license(url)
+        
         # TODO: implement
-        return None
+        return providers
 
     def lookup_url_impl(self, url, package_data=None, providers_data=None):
 
         if not package_data:
             return None
-        
-        package_details = package_data['package_details']
-       
-        
+
         #
         # The data above contains suggestions for repository
         # urls. Loop through these and analyse them if data is found,
