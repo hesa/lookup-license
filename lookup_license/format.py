@@ -75,9 +75,17 @@ class TextFormatter(Formatter):
         else:
             return None, f'{exception}'
 
-    def _add(self, title, data, key, store):
-        store.append(f'{title:<20} {data.get(key, "")}')
+    def _add_value(self, title, value, store):
+        store.append(f'{title:<20} {value}')
 
+    def _add_key(self, title, data, key, store):
+        self._add_value(title, data.get(key, ""), store)
+
+    def _license_to_string(self, lic):
+        if not lic:
+            return '<no license found>'
+        return lic
+        
     def format_lookup_urls(self, looked_up_urls, verbose=False):
         if not looked_up_urls:
             return '', 'No license data found.'
@@ -87,35 +95,61 @@ class TextFormatter(Formatter):
         else:
             identified_license_string = ''
 
-        if verbose:
-            ret = []
-            if 'meta' in looked_up_urls:
-                meta = looked_up_urls['meta']
-                if 'config_details' in meta and meta['config_details']:
-                    config_details = meta['config_details']
-                    self._add('Name:', config_details, 'name', ret)
-                    self._add('Version:', config_details, 'version', ret)
-                    self._add('Homepage:', config_details, 'homepage', ret)
+        ret = []
+        self._add_value('Identified license:', identified_license_string, ret)
+        self._add_value('Supplied url:', looked_up_urls["provided"], ret)
+        self._add_value('Supplied url type:', looked_up_urls["provided_type"], ret)
+        
+        if not verbose:
+            return identified_license_string, None
+            
+        ret.append('')
+        ret.append('Url details:')
+        ret.append('------------')
+        url_data = looked_up_urls.get('url_data')
+        if url_data:
+            if 'provided_type' in url_data:
+                self._add_key('Provided:', url_data, 'provided', ret)
+                self._add_key('Url type:', url_data, 'provided_type', ret)
+                url_data = url_data['url_data']
+            url_data_succ_urls = url_data['details']['successful_urls']
 
-                    if meta.get('repository'):
-                        ret.append(f'{"Repository:":<20} {meta.get("repository", "")}')
-                    elif 'repository' in config_details:
-                        self._add('Repository:', config_details, 'repository', ret)
-                    else:
-                        ret.append(f'{"Repository:":<20}')
+            licenses = ' AND '.join([u['license'] for u in url_data_succ_urls])
+            self._add_value('License:', licenses, ret)
 
-            orig_url_title = 'Original url:'
-            ret.append(f'{orig_url_title:<20} {looked_up_urls["provided"]}')
-            ret.append(f'{"License identified:":<20} {identified_license_string}')
-            ret.append('License identified in repository:')
-            for url in looked_up_urls['details']['successful_urls']:
-                ret.append(f' * {" AND ".join(url["license"])} <-- {url["url"]}')
-            ret.append('License identified in package configuration:')
-            if 'config_licenses' in looked_up_urls['details']:
-                config_licenses = looked_up_urls['details']['config_licenses']
-                if config_licenses:
-                    for lic in config_licenses:
-                        ret.append(f' * {lic["license"]} <-- {lic["url"]}')
-            return '\n'.join(ret), None
+            ret.append('Identifications:')
+            for succ_url in url_data_succ_urls:
+                ret.append(f' * {succ_url["url"]}: {succ_url["license"]}')
 
-        return identified_license_string, None
+        ret.append('')
+        ret.append('Package details:')
+        ret.append('----------------')
+        package_data = looked_up_urls.get('package_data')
+        if package_data:
+            package_details = package_data.get('package_details')
+            self._add_key('Name:', package_details, 'name', ret)
+            self._add_key('Version:', package_details, 'version', ret)
+            self._add_key('Type:', package_details, 'package_type', ret)
+            self._add_key('Url:', package_details, 'package_url', ret)
+            self._add_key('Homepage:', package_details, 'homepage', ret)
+            self._add_key('Repository:', package_details, 'repository', ret)
+
+            licenses = ' AND '.join([lic['license'] for lic in package_data['licenses'] ])
+            self._add_value('License:', licenses, ret)
+
+            ret.append('Identifications:')
+            for lic in package_data['licenses']:
+                ret.append(f' * {lic["url"]}: {lic["license"]}')
+
+        ret.append('')
+        ret.append('Providers details:')
+        ret.append('------------------')
+        ret.append('Identifications:')
+        providers_data = looked_up_urls.get('providers_data')
+        if providers_data:
+            for provider in providers_data:
+                lic = providers_data[provider]['license']
+                prov_url = providers_data[provider]['data_url']
+                ret.append(f' * {prov_url}: {lic}')
+
+        return '\n'.join(ret), None
