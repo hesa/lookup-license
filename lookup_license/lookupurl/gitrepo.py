@@ -3,9 +3,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 from lookup_license.lookupurl.lookupurl import LookupURL
-from lookup_license.license_db import LicenseDatabase
-
-from license_expression import ExpressionError
 
 from packageurl import PackageURL
 
@@ -174,7 +171,7 @@ class GitRepo(LookupURL):
                 suggestions.append(self._suggest_license_files(repo_url, url_source, branch))
         return suggestions
 
-    def lookup_url_impl(self, url):
+    def lookup_url_impl(self, url, package_data=None, providers_data=None):
         if url.startswith('pkg:'):
             # purl
             purl_object = PackageURL.from_string(url)
@@ -191,30 +188,11 @@ class GitRepo(LookupURL):
         suggestions = self.suggest_urls(git_url)
         ret = self.lookup_license_urls(url, suggestions)
 
-        licenses_object = self.licenses([], ret)
-
-        ret['meta'] = {}
-        ret['meta']['url_type'] = 'pypi'
-        ret['meta']['config_details'] = None
-        ret['meta']['repository'] = "', '.join(repositories)"
-        ret['details']['config_licenses'] = licenses_object['config_license']
-        ret['identified_license'] = licenses_object['identified_license']
-        ret['identified_license_string'] = licenses_object['identified_license_string']
-
         return ret
 
-    def empty_data(self):
-        return {
-            'provided': '',
-            'details': {
-                'suggestions': [],
-                'failed_urls': [],
-                'successful_urls': [],
-            },
-            'identified_license': None,
-            'success': False,
-        }
-
+    def name(self):
+        return 'GitRepo'
+    
     def gitrepo_repo(self, url):
         return ('/'.join(url.split('/')[:5]))
 
@@ -234,7 +212,7 @@ class GitRepo(LookupURL):
         if 'github.com' in url:
             return f'{url}/archive/refs/tags/{version}.zip'
 
-    def repositories_from_details(self, repo_data, version):
+    def OBSOLETE_repositories_from_details(self, repo_data, version):
         __repos = set()
         for __url in repo_data['details']['successful_urls']:
             orig_url = __url["original_url"]
@@ -242,36 +220,3 @@ class GitRepo(LookupURL):
             __repos.add(__repo)
         return list(__repos)
 
-    def licenses(self, config_data, repo_data):
-        all_licenses = set()
-
-        if config_data:
-            licenses_from_config = config_data['licenses']
-        else:
-            licenses_from_config = []
-
-        if licenses_from_config:
-            for lic in licenses_from_config:
-                all_licenses.add(lic['license'])
-
-        if repo_data['identified_license']:
-            for lic in repo_data['identified_license']:
-                all_licenses.add(lic)
-
-        try:
-            identified_license = [LicenseDatabase.expression_license_identified(x) for x in all_licenses]
-        except ExpressionError:
-            identified_license = all_licenses
-
-        try:
-            identified_license_string = LicenseDatabase.summarize_license(all_licenses)
-        except ExpressionError:
-            identified_license_string = ', '.join(all_licenses)
-
-        return {
-            'config_license': licenses_from_config,
-            'repo_licenses': repo_data['identified_license'],
-            'all': list(all_licenses),
-            'identified_license': identified_license,
-            'identified_license_string': identified_license_string,
-        }

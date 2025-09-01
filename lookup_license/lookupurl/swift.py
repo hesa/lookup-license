@@ -4,6 +4,7 @@
 
 from lookup_license.lookupurl.lookupurl import LookupURL
 from lookup_license.lookupurl.gitrepo import GitRepo
+from lookup_license.cache import LookupLicenseCache
 
 from packageurl import PackageURL
 from lookup_license.retrieve import Retriever
@@ -15,12 +16,16 @@ import re
 class Swift(LookupURL):
 
     swiftpackageindex = None
+    swiftpackageindex_cache_key = 'lookup-license-swift-cache'
 
     def __init__(self):
         logging.debug("Swift()")
         self.gitrepo = GitRepo()
         super().__init__()
 
+    def name(self):
+        return 'Swift'
+        
     def _try_swift_config_url(self, url):
         pass
 
@@ -36,15 +41,23 @@ class Swift(LookupURL):
         packages_url = 'https://github.com/SwiftPackageIndex/PackageList/raw/refs/heads/main/packages.json'
 
         if not Swift.swiftpackageindex:
-            retriever = Retriever()
-            retrieved_result = retriever.download_url(packages_url)
-            success = retrieved_result['success']
-            if not success:
-                return None
-            decoded_content = retrieved_result['decoded_content']
-            Swift.swiftpackageindex = decoded_content
+            logging.debug('SwiftPackageIndex not initialized')
+            try:
+                Swift.swiftpackageindex = LookupLicenseCache().get(Swift.swiftpackageindex_cache_key)
+                logging.debug('SwiftPackageIndex read from cache')
+            except Exception as e:
+                logging.debug(f'SwiftPackageIndex reading from {packages_url}')
+                retriever = Retriever()
+                retrieved_result = retriever.download_url(packages_url)
+                success = retrieved_result['success']
+                if not success:
+                    return None
+                decoded_content = retrieved_result['decoded_content']
+                Swift.swiftpackageindex = json.loads(decoded_content)
+                logging.debug('SwiftPackageIndex read from url')
+                LookupLicenseCache().add(Swift.swiftpackageindex_cache_key, Swift.swiftpackageindex)
+                logging.debug('SwiftPackageIndex stored in cache')
 
-        json_data = json.loads(decoded_content)
 
         # TODO: use the API to get the package meta data and from that the licenses # noqa: T101
         # * https://swiftpackageindex.com/<org>/collection.json
@@ -60,7 +73,10 @@ class Swift(LookupURL):
 
                 # if namespace in purl
                 if purl_object.namespace:
-                    reg_exp = f'https://github.com/{purl_object.namespace}/{purl_object.name}'
+                    if 'github.com' in purl_object.namespace:
+                        reg_exp = f'https://{purl_object.namespace}/{purl_object.name}'
+                    else:
+                        reg_exp = f'https://github.com/{purl_object.namespace}/{purl_object.name}'
                 else:
                     reg_exp = f'https://github.com/{purl_object.name}'
 
@@ -82,7 +98,7 @@ class Swift(LookupURL):
         # identify the urls matching the name
         # if 1 is found, return that one
         # * the above is true for https://swiftpackageindex.com/lokalise/lokalise-ios-framework
-        urls = [pkg for pkg in json_data if reg_exp in pkg]
+        urls = [pkg for pkg in Swift.swiftpackageindex if reg_exp in pkg]
         if len(urls) == 0:
             logging.warning(f'Could not identify a repository for {url}')
 
@@ -100,8 +116,8 @@ class Swift(LookupURL):
         else:
             git_url = git_url
 
-        config_details = {
-            'config_url': packages_url,
+        package_details = {
+            'package_url': packages_url,
             'homepage': '',
             'name': '',
             'version': '',
@@ -112,10 +128,10 @@ class Swift(LookupURL):
             'licenses': [],
             'repo_suggestions': [{
                 'repository': git_url,
-                'config_url': '',
-                'config_path': '',
+                'package_url': '',
+                'package_path': '',
             }],
-            'config_details': config_details,
+            'package_details': package_details,
         }
 
     def _guess_urls(self, url):
@@ -155,7 +171,7 @@ class Swift(LookupURL):
             'repo_suggestions': url_suggestions,
         }
 
-    def lookup_url_impl(self, url):
+    def lookup_package(self, url):
         # Try identifying the purl in swiftpackageindex.com
         swiftpackageindex_data = self._try_swiftpackageindex(url)
         if swiftpackageindex_data:
@@ -164,7 +180,11 @@ class Swift(LookupURL):
         else:
             data_suggestion = self._guess_urls(url)
 
-        url_suggestions = data_suggestion['repo_suggestions']
+        return data_suggestion
+        
+    def lookup_url_impl(self, url, package_data=None, providers_data=None):
+        
+        url_suggestions = package_data['repo_suggestions']
         #
         # The 'urls' variable above contains suggestions for
         # repository urls. Loop through these and analyse them if data
@@ -173,25 +193,10 @@ class Swift(LookupURL):
         repo_data = None
         for repo in uniq_repos:
             repo_data = self.gitrepo.lookup_url(repo)
-            success = repo_data['success']
+            success = repo_data['url_data']['success']
             if success:
                 break
             else:
                 repo_data = None
-
-        if not repo_data:
-            return None
-
-        licenses_object = self.gitrepo.licenses([], repo_data)
-        repositories = []
-
-        repo_data['provided'] = url
-        repo_data['meta'] = {}
-        repo_data['meta']['url_type'] = 'gem'
-        repo_data['meta']['config_details'] = data_suggestion.get('config_details', {})
-        repo_data['meta']['repository'] = ', '.join(repositories)
-        repo_data['details']['config_licenses'] = licenses_object['config_license']
-        repo_data['identified_license'] = licenses_object['identified_license']
-        repo_data['identified_license_string'] = licenses_object['identified_license_string']
 
         return repo_data

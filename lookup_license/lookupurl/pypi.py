@@ -196,12 +196,10 @@ class Pypi(LookupURL):
 #        else:
 #            version = None
 
-        print("APA: " + str(identified_pypi_data))
         return identified_pypi_data
 
     def lookup_providers(self, url, version):
         # Identify licenses at providers
-        print(f'lookup_providers {url}, {version}')
         providers = self.lookup_providers_impl(url, version)
         return providers
 

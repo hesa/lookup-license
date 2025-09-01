@@ -20,7 +20,7 @@ class Gem(LookupURL):
         self.gitrepo = GitRepo()
         super().__init__()
 
-    def _try_gem_config_url(self, gem_url):
+    def _try_gem_package_url(self, gem_url):
         retriever = Retriever()
         retrieved_result = retriever.download_url(gem_url)
         success = retrieved_result['success']
@@ -29,7 +29,7 @@ class Gem(LookupURL):
         decoded_content = retrieved_result['decoded_content']
         json_data = json.loads(decoded_content)
 
-        licenses_from_config = []
+        licenses_from_package = []
         #
         # Handle licenses variable (in gem JSON data)
         #
@@ -41,12 +41,12 @@ class Gem(LookupURL):
                 'license': ' AND '.join(license_var),
             }
             logging.info(f'found license {license_var} in {gem_url}')
-            licenses_from_config.append(license_object)
+            licenses_from_package.append(license_object)
 
         #
         # Identify source code repository
         #
-        config_details = {}
+        package_details = {}
         repo_suggestions = []
         JSON_PATHS = [
             'metadata.source_code_url',
@@ -69,15 +69,15 @@ class Gem(LookupURL):
             if repo_url_version:
                 repo_suggestions.append({
                     'repository': repo_url_version,
-                    'config_url': gem_url,
-                    'config_path': complete_path,
+                    'package_url': gem_url,
+                    'package_path': complete_path,
                 })
                 fixed_url = fix_url('gems', repo_url_version)
                 if fixed_url:
                     repo_suggestions.append({
                         'repository': fixed_url,
-                        'config_url': gem_url,
-                        'config_path': complete_path,
+                        'package_url': gem_url,
+                        'package_path': complete_path,
                     })
 
         repo_url = json_data.get('source_code_uri')
@@ -87,8 +87,8 @@ class Gem(LookupURL):
                 if 'source_code_url' in metadata:
                     repo_url = metadata['source_code_url']
 
-        config_details = {
-            'config_url': gem_url,
+        package_details = {
+            'package_url': gem_url,
             'homepage': json_data.get('homepage_uri', ''),
             'name': json_data.get('name', ''),
             'version': json_data.get('version', ''),
@@ -96,9 +96,9 @@ class Gem(LookupURL):
         }
 
         return {
-            'licenses': licenses_from_config,
+            'licenses': licenses_from_package,
             'repo_suggestions': repo_suggestions,
-            'config_details': config_details,
+            'package_details': package_details,
         }
 
     def _find_latest_version(self, pkg_name):
@@ -113,8 +113,7 @@ class Gem(LookupURL):
 
         return json_data['version']
 
-    def lookup_url_impl(self, url):
-
+    def lookup_package(self, url):
         url = url.strip('/')
 
         if url.startswith('pkg:'):
@@ -156,49 +155,40 @@ class Gem(LookupURL):
         # ** ... skip the remaining urls
         identified_gem_data = None
         for gem_url in gem_urls:
-            gem_data = self._try_gem_config_url(gem_url)
+            gem_data = self._try_gem_package_url(gem_url)
             if gem_data:
                 # this gem url had data
                 # use the data below
                 identified_gem_data = gem_data
                 logging.info(f'found gems data via {gem_url}: {gem_data["repo_suggestions"]}')
                 break
-        if not identified_gem_data:
-            # TODO: add return data # noqa: T101
-            return None
 
+        return identified_gem_data
+
+    def lookup_providers_impl(self, url, version=None):
+        # TODO: implement
+        return None
+
+    def lookup_url_impl(self, url, package_data=None, providers_data=None):
+
+        if not package_data:
+            return None
+        
+        package_details = package_data['package_details']
+       
+        
         #
         # The data above contains suggestions for repository
         # urls. Loop through these and analyse them if data is found,
         # use the data from that repo
-        uniq_repos = set()
+        uniq_repos = set([repo['repository'] for repo in package_data['repo_suggestions']]) # noqa: C403
         repo_data = None
-        for repo in identified_gem_data['repo_suggestions']:
-            if repo['repository'] in uniq_repos:
-                continue
-            uniq_repos.add(repo['repository'])
-            repo_data = self.gitrepo.lookup_url(repo['repository'])
-            success = repo_data['success']
+        for repo in uniq_repos:
+            repo_data = self.gitrepo.lookup_url(repo)
+            success = repo_data['url_data']['success']
             if success:
                 break
             else:
                 repo_data = None
-
-        if not repo_data:
-            repo_data = self.gitrepo.empty_data()
-
-        licenses_object = self.gitrepo.licenses(identified_gem_data, repo_data)
-        version = identified_gem_data['config_details']['version']
-        repositories = self.gitrepo.repositories_from_details(repo_data, version)
-
-        repo_data['provided'] = url
-        repo_data['meta'] = {}
-        repo_data['meta']['url_type'] = 'gem'
-        repo_data['meta']['config_details'] = identified_gem_data['config_details']
-        repo_data['meta']['repository'] = ', '.join(repositories)
-        repo_data['details']['suggestions'].append([gem_url])
-        repo_data['details']['config_licenses'] = licenses_object['config_license']
-        repo_data['identified_license'] = licenses_object['identified_license']
-        repo_data['identified_license_string'] = licenses_object['identified_license_string']
 
         return repo_data
