@@ -6,7 +6,7 @@ from lookup_license.lookupurl.lookupurl import LookupURL
 from lookup_license.lookupurl.gitrepo import GitRepo
 from lookup_license.cache import LookupLicenseCache
 
-from packageurl import PackageURL
+from packageurl import PackageURL  # noqa: I900
 from lookup_license.retrieve import Retriever
 
 import json
@@ -25,7 +25,7 @@ class Swift(LookupURL):
 
     def name(self):
         return 'Swift'
-        
+
     def _try_swift_config_url(self, url):
         pass
 
@@ -45,7 +45,7 @@ class Swift(LookupURL):
             try:
                 Swift.swiftpackageindex = LookupLicenseCache().get(Swift.swiftpackageindex_cache_key)
                 logging.debug('SwiftPackageIndex read from cache')
-            except Exception as e:
+            except Exception:
                 logging.debug(f'SwiftPackageIndex reading from {packages_url}')
                 retriever = Retriever()
                 retrieved_result = retriever.download_url(packages_url)
@@ -57,7 +57,6 @@ class Swift(LookupURL):
                 logging.debug('SwiftPackageIndex read from url')
                 LookupLicenseCache().add(Swift.swiftpackageindex_cache_key, Swift.swiftpackageindex)
                 logging.debug('SwiftPackageIndex stored in cache')
-
 
         # TODO: use the API to get the package meta data and from that the licenses # noqa: T101
         # * https://swiftpackageindex.com/<org>/collection.json
@@ -181,9 +180,9 @@ class Swift(LookupURL):
             data_suggestion = self._guess_urls(url)
 
         return data_suggestion
-        
+
     def lookup_url_impl(self, url, package_data=None, providers_data=None):
-        
+
         url_suggestions = package_data['repo_suggestions']
         #
         # The 'urls' variable above contains suggestions for
