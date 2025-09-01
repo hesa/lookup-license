@@ -4,7 +4,7 @@
 
 from lookup_license.lookupurl.lookupurl import LookupURL
 
-from packageurl import PackageURL
+from packageurl import PackageURL  # noqa: I900
 
 import logging
 
@@ -192,7 +192,7 @@ class GitRepo(LookupURL):
 
     def name(self):
         return 'GitRepo'
-    
+
     def gitrepo_repo(self, url):
         return ('/'.join(url.split('/')[:5]))
 
@@ -211,12 +211,3 @@ class GitRepo(LookupURL):
             return None
         if 'github.com' in url:
             return f'{url}/archive/refs/tags/{version}.zip'
-
-    def OBSOLETE_repositories_from_details(self, repo_data, version):
-        __repos = set()
-        for __url in repo_data['details']['successful_urls']:
-            orig_url = __url["original_url"]
-            __repo = self.gitrepo_with_version(orig_url, version)
-            __repos.add(__repo)
-        return list(__repos)
-

@@ -172,8 +172,7 @@ class Gem(LookupURL):
         if url.startswith('pkg:'):
             # purl is supported by clearlydefined, so just pass the url as it is
             providers[cd.name()] = cd.lookup_license(url)
-        
-        # TODO: implement
+
         return providers
 
     def lookup_url_impl(self, url, package_data=None, providers_data=None):

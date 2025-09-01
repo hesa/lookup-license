@@ -85,7 +85,7 @@ class TextFormatter(Formatter):
         if not lic:
             return '<no license found>'
         return lic
-        
+
     def format_lookup_urls(self, looked_up_urls, verbose=False):
         if not looked_up_urls:
             return '', 'No license data found.'
@@ -99,10 +99,10 @@ class TextFormatter(Formatter):
         self._add_value('Identified license:', identified_license_string, ret)
         self._add_value('Supplied url:', looked_up_urls["provided"], ret)
         self._add_value('Supplied url type:', looked_up_urls["provided_type"], ret)
-        
+
         if not verbose:
             return identified_license_string, None
-            
+
         ret.append('')
         ret.append('Url details:')
         ret.append('------------')
@@ -134,7 +134,7 @@ class TextFormatter(Formatter):
             self._add_key('Homepage:', package_details, 'homepage', ret)
             self._add_key('Repository:', package_details, 'repository', ret)
 
-            licenses = ' AND '.join([lic['license'] for lic in package_data['licenses'] ])
+            licenses = ' AND '.join([lic['license'] for lic in package_data['licenses']])
             self._add_value('License:', licenses, ret)
 
             ret.append('Identifications:')

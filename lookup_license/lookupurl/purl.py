@@ -4,8 +4,8 @@
 
 from lookup_license.lookupurl.lookupurl import LookupURL
 
-from packageurl import PackageURL
-from packageurl.contrib import purl2url
+from packageurl import PackageURL  # noqa: I900
+from packageurl.contrib import purl2url  # noqa: I900
 
 from lookup_license.lookupurl.gem import Gem
 from lookup_license.lookupurl.pypi import Pypi

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Henrik Sandklef
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 from purltools import purl2clearlydefined  # noqa: I900
 from lookup_license.lookupurl.license_provider import LicenseProvider
 from lookup_license.retrieve import Retriever

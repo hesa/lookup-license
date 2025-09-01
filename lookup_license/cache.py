@@ -28,7 +28,7 @@ class LookupLicenseCache():
         if not self.enabled:
             logging.debug(f'LookupLicenseCache is disabled, will not store {key}')
             return
-        
+
         logging.debug(f'LookupLicenseCache add {key}')
 
         if not self.cache.add(key, value):

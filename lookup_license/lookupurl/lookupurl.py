@@ -25,7 +25,7 @@ class LookupURL:
 
     def name(self):
         return 'LookupURL'
-    
+
     def lookup_url(self, url):
 
         try:
@@ -35,12 +35,12 @@ class LookupURL:
 
         # Lookup package data (e.g. from pypi.org), if any
         # .. this is typically implemented by sub classes
-        
+
         package_data = self.lookup_package(url)
         if package_data:
             try:
                 version = package_data.get('package_details').get('version')
-            except:
+            except Exception:
                 version = None
         else:
             version = None
@@ -52,7 +52,7 @@ class LookupURL:
         # Identify licenses from urls (e.g. from package_data)
         # .. this is typically implemented by sub classes
         url_data = self.lookup_url_impl(url, package_data, providers_data)
-        
+
         licenses_object = self.licenses(package_data, url_data, providers_data)
 
         #
@@ -164,11 +164,6 @@ class LookupURL:
         else:
             licenses_from_config = []
 
-        if repo_data:
-            licenses_from_repo = repo_data['identified_license']
-        else:
-            licenses_from_repo = []
-
         if licenses_from_config:
             for lic in licenses_from_config:
                 all_licenses.add(lic['license'])
@@ -187,8 +182,7 @@ class LookupURL:
                 if lic:
                     all_licenses.add(lic)
                     providers_licenses.append(lic)
-                    
-                    
+
         try:
             identified_license = [LicenseDatabase.expression_license_identified(x) for x in all_licenses]
         except ExpressionError:
