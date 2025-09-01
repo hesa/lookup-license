@@ -5,6 +5,9 @@
 from lookup_license.lookuplicense import LookupLicense
 from lookup_license.retrieve import Retriever
 from lookup_license.cache import LookupLicenseCache
+from lookup_license.license_db import LicenseDatabase
+
+from license_expression import ExpressionError
 
 import logging
 
@@ -14,17 +17,62 @@ class LookupURL:
         logging.debug("LookupURL()")
         self.lookup_license = LookupLicense()
 
+    def lookup_package(self, url):
+        return None
+
+    def lookup_providers(self, url, version):
+        return None
+
+    def name(self):
+        return 'LookupURL'
+    
     def lookup_url(self, url):
+
         try:
             return LookupLicenseCache().get(url)
         except Exception as e:
             logging.debug(f'lookup_url: failed to get data from cache for {url}, {e}')
 
-        ret = self.lookup_url_impl(url)
-        logging.debug(f'add to cache: {url}')
-        LookupLicenseCache().add(url, ret)
+        # Lookup package data (e.g. from pypi.org), if any
+        # .. this is typically implemented by sub classes
+        
+        package_data = self.lookup_package(url)
+        if package_data:
+            try:
+                version = package_data.get('package_details').get('version')
+            except:
+                version = None
+        else:
+            version = None
 
-        return ret
+        # Identify licenses at providers
+        # .. this is typically implemented by sub classes
+        providers_data = self.lookup_providers(url, version)
+
+        # Identify licenses from urls (e.g. from package_data)
+        # .. this is typically implemented by sub classes
+        url_data = self.lookup_url_impl(url, package_data, providers_data)
+        
+        licenses_object = self.licenses(package_data, url_data, providers_data)
+
+        #
+        # pack data
+        #
+        data = {
+            'provided': url,
+            'provided_type': self.name(),
+            'package_data': package_data,
+            'providers_data': providers_data,
+            'url_data': url_data,
+            'package_licenses': licenses_object['package_license'],
+            'identified_license': licenses_object['identified_license'],
+            'identified_license_string': licenses_object['identified_license_string'],
+        }
+
+        logging.debug(f'add to cache: {url}')
+        LookupLicenseCache().add(url, data)
+
+        return data
 
     def lookup_url_impl(self, url):
         return self.lookup_license_urls(url, [[url]])
@@ -73,11 +121,12 @@ class LookupURL:
                 if status:
                     for _lic in lic['normalized']:
                         licenses_from_url.append(_lic["license"])
+                    licenses_from_url_str = ' AND '.join(licenses_from_url)
                     if licenses_from_url:
                         successful_urls.append({
                             'url': _url,
                             'original_url': _orig_url,
-                            'license': licenses_from_url,
+                            'license': licenses_from_url_str,
                             'lookup-type': 'license-file',
                             'downloaded': retrieved_result,
                             'details': _lic,
@@ -106,3 +155,56 @@ class LookupURL:
             'success': success,
         }
         return res
+
+    def licenses(self, config_data, repo_data, providers_data):
+        all_licenses = set()
+
+        if config_data:
+            licenses_from_config = config_data['licenses']
+        else:
+            licenses_from_config = []
+
+        if repo_data:
+            licenses_from_repo = repo_data['identified_license']
+        else:
+            licenses_from_repo = []
+
+        if licenses_from_config:
+            for lic in licenses_from_config:
+                all_licenses.add(lic['license'])
+
+        if repo_data and repo_data['identified_license']:
+            for lic in repo_data['identified_license']:
+                all_licenses.add(lic)
+            repo_licenses = repo_data['identified_license']
+        else:
+            repo_licenses = []
+
+        providers_licenses = []
+        if providers_data:
+            for provider in providers_data:
+                lic = providers_data[provider]['license']
+                if lic:
+                    all_licenses.add(lic)
+                    providers_licenses.append(lic)
+                    
+                    
+        try:
+            identified_license = [LicenseDatabase.expression_license_identified(x) for x in all_licenses]
+        except ExpressionError:
+            identified_license = all_licenses
+
+        try:
+            identified_license_string = LicenseDatabase.summarize_license(all_licenses)
+        except ExpressionError:
+            identified_license_string = ', '.join(all_licenses)
+
+        ret = {
+            'package_license': licenses_from_config,
+            'repo_license': repo_licenses,
+            'providers_license': providers_licenses,
+            'all': list(all_licenses),
+            'identified_license': identified_license,
+            'identified_license_string': identified_license_string,
+        }
+        return ret
