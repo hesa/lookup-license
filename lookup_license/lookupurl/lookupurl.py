@@ -18,15 +18,19 @@ class LookupURL:
         self.lookup_license = LookupLicense()
 
     def lookup_package(self, url):
+        logging.debug(f'{self.__class__.__name__}:lookup_package {url}')
         return None
 
     def lookup_providers(self, url, version):
+        logging.debug(f'{self.__class__.__name__}:lookup_providers {url}, {version}')
         return None
 
     def name(self):
+        logging.debug(f'{self.__class__.__name__}:lookup_name()')
         return 'LookupURL'
 
     def lookup_url(self, url):
+        logging.debug(f'{self.__class__.__name__}:lookup_url {url}')
 
         try:
             return LookupLicenseCache().get(url)
@@ -78,7 +82,7 @@ class LookupURL:
         return self.lookup_license_urls(url, [[url]])
 
     def lookup_license_urls(self, url, suggestions):
-        logging.debug(f'lookup_license_urls {suggestions}')
+        logging.debug(f'{self.__class__.__name__}:lookup_license_urls {url}, {suggestions is not None}')
         retriever = Retriever()
 
         failed_urls = []
@@ -135,7 +139,7 @@ class LookupURL:
 
             if license_identifications:
                 break
-        logging.debug(f'lookup_license_url({license} ==> {" AND ".join(license_identifications)}')
+        logging.debug(f'lookup_license_url ({license} ==> {" AND ".join(license_identifications)}')
 
         if license_identifications:
             identified_license = license_identifications
