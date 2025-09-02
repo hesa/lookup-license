@@ -4,6 +4,7 @@
 
 from lookup_license.lookupurl.lookupurl import LookupURL
 from lookup_license.lookupurl.gitrepo import GitRepo
+from lookup_license.lookupurl.license_providers import LicenseProviders
 from lookup_license.lookupurl.clearlydefined import ClearlyDefined
 from lookup_license.utils import get_keypath
 
@@ -120,26 +121,46 @@ class Pypi(LookupURL):
             if _data:
                 return _data
 
-    def lookup_providers_impl(self, url, version=None):
-        providers = {}
-        logging.debug(f'{self.__class__.__name__}:lookup_providers_impl {url}, {version}')
-
-        #
-        # ClearlyDefined
-        #
-        cd = ClearlyDefined()
-        if 'https://pypi.org' in url:
-            # Create ClearlyDefined coordinate from pypi path
-            stripped_url = re.sub(r'/json[/]*$', '', url)
+    def _get_parameters(self, url, version):
+        if 'https://pypi.org/project/' in url:
+            stripped_url = url.strip('/')
+            stripped_url = re.sub(r'/json[/]*$', '', stripped_url)
+            stripped_url = re.sub(r'^http[s]*://pypi.org/project/', '', stripped_url)
+            splits = stripped_url.split('/')
+            pkg_name = splits[0]
+            pkg_version = splits[1]
+        elif 'https://pypi.org/pypi/' in url:
+            stripped_url = url.strip('/')
+            stripped_url = re.sub(r'/json[/]*$', '', stripped_url)
             stripped_url = re.sub(r'^http[s]*://pypi.org/pypi/', '', stripped_url)
-            coord_url = f'pkg:pypi/{stripped_url.replace("/", "@")}'
+            splits = stripped_url.split('/')
+            pkg_name = splits[0]
+            pkg_version = splits[1]
+        elif 'https://pypi.org/' in url:
+            raise Exception(f'pypi URLs should start with https://pypi.org/project/ or https://pypi.org/pypi/. The following URL is incorrect: {url}')
+            print("...........................................................")
+            # Create ClearlyDefined coordinate from pypi path
+            print(f'url:         "{url}"')
+            stripped_url = re.sub(r'/json[/]*$', '', url)
+            print(f'stripped_url "{stripped_url}"')
+            stripped_url = re.sub(r'^http[s]*://pypi.org/pypi/', '', stripped_url)
+            print(f'stripped_url "{stripped_url}"')
+            splits = stripped_url.split('/')
+            pkg_name = splits[0]
+            pkg_version = splits[1]
+#            providers = LicenseProviders().lookup_license_package(url, 'pypi', 'pypi', pkg_name, pkg_version)
+            #coord_url = f'pkg:pypi/{stripped_url.replace("/", "@")}'
 
-            providers[cd.name()] = cd.lookup_license(coord_url)
+            #providers[cd.name()] = cd.lookup_license(coord_url)
         elif url.startswith('pkg:'):
             # purl is supported by clearlydefined, so just pass the url as it is
-            providers[cd.name()] = cd.lookup_license(url)
+            purl_dict = PackageURL.from_string(url).to_dict()
+            pkg_name = purl_dict['name']
+            pkg_version = purl_dict['version']
+            
+            #providers[cd.name()] = cd.lookup_license(url)
         else:
-            # Create Purl coordinate from pypi package name
+            # Create parameters from pypi package name
             stripped_url = re.sub(r'^[/]*pypi/', '', url)
             splits = stripped_url.split('@')
             pkg_name = splits[0]
@@ -147,8 +168,21 @@ class Pypi(LookupURL):
                 pkg_version = splits[1]
             except Exception:
                 pkg_version = version
-            providers[cd.name()] = cd.lookup_license_package(url, 'pypi', 'pypi', pkg_name, pkg_version)
 
+        return {
+            'name': pkg_name,
+            'version': pkg_version,
+        }
+
+    def lookup_providers_impl(self, url, version=None):
+        logging.debug(f'{self.__class__.__name__}:lookup_providers_impl {url}, {version}')
+
+        parameters = self._get_parameters(url, version)
+        logging.debug(f'{self.__class__.__name__}:lookup_providers_impl parameters: {parameters}')
+
+        providers = LicenseProviders().lookup_license_package(url, 'pypi', 'pypi', parameters['name'], parameters['version'])
+        logging.debug(f'{self.__class__.__name__}:lookup_providers_impl providers: {providers}')
+        
         return providers
 
     def lookup_package(self, url):
@@ -170,6 +204,7 @@ class Pypi(LookupURL):
                 f'{url}/json'.replace('/project/', '/pypi/'),
                 url,
             ]
+            print("-------------------------------- " + str(pypi_urls))
         else:
             if '/' in url:
                 raise Exception('A python package cannot contain "/".')
@@ -184,12 +219,16 @@ class Pypi(LookupURL):
         # scrape the configuration data and the repos suggested
         identified_pypi_data = None
         for pypi_url in pypi_urls:
-            pypi_data = self._try_pypi_package_url(pypi_url)
-            if pypi_data:
-                # this pypi url had data
-                # use the data below
-                identified_pypi_data = pypi_data
-                break
+            print("pypi url ------------------------------: " + pypi_url)
+            try:
+                pypi_data = self._try_pypi_package_url(pypi_url)
+                if pypi_data:
+                    # this pypi url had data
+                    # use the data below
+                    identified_pypi_data = pypi_data
+                    break
+            except Exception:
+                pass
 
         return identified_pypi_data
 
