@@ -28,7 +28,10 @@ class Gem(LookupURL):
         if not success:
             return None
         decoded_content = retrieved_result['decoded_content']
-        json_data = json.loads(decoded_content)
+        try:
+            json_data = json.loads(decoded_content)
+        except Exception:
+            return None
 
         licenses_from_package = []
         #
@@ -117,6 +120,8 @@ class Gem(LookupURL):
     def lookup_package(self, url):
         url = url.strip('/')
 
+        # example url to suggest: https://rubygems.org/api/v2/rubygems/google-cloud-env/versions/1.6.0.json
+
         if url.startswith('pkg:'):
             # purl
             purl_object = PackageURL.from_string(url)
@@ -130,9 +135,22 @@ class Gem(LookupURL):
                 f'https://rubygems.org/api/v2/rubygems/{purl_object.name}/versions/{pkg_version}.json',
             ]
             logging.info(f'suggested gem conf urls from pkg:: {gem_urls}')
+        elif url.startswith('https://rubygems.org/gems/'):
+            # examples:
+            # * https://rubygems.org/gems/tty-spinner
+            # * https://rubygems.org/gems/tty-spinner/versions/0.9.2
+            new_url = url.replace('https://rubygems.org/gems/', '').replace('/versions/', '@')
+            splits = new_url.split('@')
+            if len(splits) == 1:
+                raise Exception("The version of a Gem package is currently needed")
+            gem_name = splits[0]
+            gem_version = splits[1]
+            gem_urls = [
+                f'https://rubygems.org/api/v2/rubygems/{gem_name}/versions/{gem_version}.json',
+            ]
+
         elif url.startswith('http'):
             # https
-
             # TODO: check if URL contains https://rubygems.org/api/v2/rubygems # noqa: T101
             gem_urls = [
                 url,
@@ -147,7 +165,7 @@ class Gem(LookupURL):
             gem_urls = [
                 f'https://rubygems.org/api/v2/rubygems/{new_url}.json',
             ]
-            logging.info(f'suggested gem conf urls form *: {gem_urls}')
+            logging.info(f'suggested gem conf urls form <else branch>: {gem_urls}')
 
         #
         # Loop through gem urls,
@@ -166,12 +184,28 @@ class Gem(LookupURL):
 
         return identified_gem_data
 
-    def lookup_providers(self, url, version=None):
-        providers = {}
-        cd = ClearlyDefined()
+    def clearly_defined_url(self, url, version=None):
         if url.startswith('pkg:'):
             # purl is supported by clearlydefined, so just pass the url as it is
-            providers[cd.name()] = cd.lookup_license(url)
+            return url
+        elif url.startswith('http'):
+            # https  (e.g. https://rubygems.org/gems/google-cloud-env/versions/2.3.0)
+            new_url = url.replace('https://rubygems.org/gems/', '')
+            new_url = new_url.replace('/versions/', '@')
+            splits = new_url.split('@')
+            if len(splits) < 2:
+                raise Exception(f'Gem package must have name and version (name@version): {url}')
+            return ClearlyDefined().parameters_to_coordinate_url('gem', 'rubygems', splits[0], splits[1])
+        else:
+            splits = url.split('@')
+            return ClearlyDefined().parameters_to_coordinate_url('gem', 'rubygems', splits[0], splits[1])
+
+    def lookup_providers(self, url, version=None):
+        providers = {}
+
+        cd = ClearlyDefined()
+        cd_url = self.clearly_defined_url(url, version)
+        providers[cd.name()] = cd.lookup_license(cd_url)
 
         return providers
 
