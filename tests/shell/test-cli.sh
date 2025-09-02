@@ -33,18 +33,19 @@ then
 #    echo "All tests"
 fi
 
-PYPI_PACKAGES=("pkg:pypi/boto3@1.35.99;Apache-2.0 AND License :: OSI Approved :: Apache Software License"
+PYPI_PACKAGES=("pkg:pypi/boto3@1.35.99;Apache-2.0 AND License :: OSI Approved :: Apache Software License AND LicenseRef-scancode-unknown-license-reference"
                "pkg:pypi/click@8.1.8;BSD-3-Clause AND License :: OSI Approved :: BSD License"
               )
 SWIFT_PACKAGES=("pkg:swift/github.com/google/abseil-cpp-binary@1.2024011602.0;Apache-2.0"
                 "pkg:swift/github.com/firebase/leveldb@1.22.5;BSD-3-Clause AND generic-cla"
               )
 GEM_PACKAGES=("pkg:gem/google-apis-core@0.11.1;Apache-2.0"
-              "pkg:gem/google-cloud-env@1.6.0;Apache-2.0"
-              "pkg:gem/aws-sdk-s3@1.135.0;Apache-2.0"
+              "pkg:gem/google-cloud-env@1.6.0;Apache-2.0 AND NOASSERTION"
+              "pkg:gem/aws-sdk-s3@1.135.0;Apache-2.0 AND NOASSERTION"
               )
 URLS=("https://github.com/postmodern/digest-crc/blob/main/LICENSE.txt;MIT"
       "https://raw.githubusercontent.com/postmodern/digest-crc/main/LICENSE.txt;MIT"
+      "https://rubygems.org/gems/google-cloud-env/versions/2.3.0;Apache-2.0"
      )
 
 URLS_TEXT=("https://raw.githubusercontent.com/postmodern/digest-crc/main/LICENSE.txt;MIT"
@@ -204,9 +205,11 @@ test_purl_pypi_licenses()
         pypi_value=${PYPI_PACKAGES[$i]}
         local URL="$(echo $pypi_value | cut -d ";" -f 1)"
         local LIC="$(echo $pypi_value | cut -d ";" -f 2)"
+#        echo; echo url_license " --purl $URL"; echo
         url_license "$URL"    "$LIC" " --purl "
         
         local PKG="$(echo $URL | sed 's,pkg:[a-z]*/,,g')"
+#        echo; echo        url_license "  --pypi $PKG" ; echo
         url_license "$PKG"    "$LIC" " --pypi "
         if [ "$LIMITED_TEST" = "True" ]
         then

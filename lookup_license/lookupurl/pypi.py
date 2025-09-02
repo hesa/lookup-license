@@ -122,6 +122,7 @@ class Pypi(LookupURL):
 
     def lookup_providers_impl(self, url, version=None):
         providers = {}
+        logging.debug(f'{self.__class__.__name__}:lookup_providers_impl {url}, {version}')
 
         #
         # ClearlyDefined
@@ -151,6 +152,7 @@ class Pypi(LookupURL):
         return providers
 
     def lookup_package(self, url):
+        logging.debug(f'{self.__class__.__name__}:lookup_package {url}')
 
         url = url.strip('/')
 
@@ -169,6 +171,8 @@ class Pypi(LookupURL):
                 url,
             ]
         else:
+            if '/' in url:
+                raise Exception('A python package cannot contain "/".')
             new_url = url.replace('@', '/')
             new_url = new_url.replace('==', '/')
             pypi_urls = [
@@ -190,14 +194,17 @@ class Pypi(LookupURL):
         return identified_pypi_data
 
     def lookup_providers(self, url, version):
+        logging.debug(f'{self.__class__.__name__}:lookup_providers {url}, {version}')
         # Identify licenses at providers
         providers = self.lookup_providers_impl(url, version)
         return providers
 
     def name(self):
+        logging.debug(f'{self.__class__.__name__}:name()')
         return 'Pypi'
 
     def lookup_url_impl(self, url, package_data=None, providers_data=None):
+        logging.debug(f'{self.__class__.__name__}:lookup_url_impl {url}, {package_data is not None}, {providers_data is not None}')
         repo_data = None
 
         if not package_data:

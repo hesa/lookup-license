@@ -2,7 +2,9 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from purltools import purl2clearlydefined  # noqa: I900
+# from purltools import purl2clearlydefined  # noqa: I900
+from lookup_license.lookupurl.purl2cd import purl2clearlydefined
+
 from lookup_license.lookupurl.license_provider import LicenseProvider
 from lookup_license.retrieve import Retriever
 
@@ -24,13 +26,24 @@ class ClearlyDefined(LicenseProvider):
         coord_url = f'https://api.clearlydefined.io/definitions/{coord}'
         return coord_url
 
-    def lookup_license_package_impl(self, orig_url, pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers=None, pkg_subpath=None):
+    def parameters_to_coordinate_url(self, pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers=None, pkg_subpath=None):
         if pkg_version:
             pkg_version_str = f'/{pkg_version}'
         else:
             pkg_version_str = ''
-        coordinates = f'{pkg_type}/{pkg_namespace}/-/{pkg_name}{pkg_version_str}'
+
+        if pkg_namespace:
+            pkg_namespace_str = f'/{pkg_namespace}'
+        else:
+            pkg_namespace_str = ''
+
+        coordinates = f'{pkg_type}{pkg_namespace_str}/-/{pkg_name}{pkg_version_str}'
         coord_url = f'https://api.clearlydefined.io/definitions/{coordinates}'
+
+        return coord_url
+
+    def lookup_license_package_impl(self, orig_url, pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers=None, pkg_subpath=None):
+        coord_url = self.parameters_to_coordinate_url(pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers, pkg_subpath)
         return self.lookup_license_impl(coord_url)
 
     def lookup_license_impl(self, url):

@@ -93,7 +93,7 @@ class Purl(LookupURL):
         return None
 
     def lookup_url_impl(self, url, package_data, providers_data):
-        logging.debug('Purl: lookup_url')
+        logging.debug(f'{self.__class__.__name__}:lookup_url_impl {url}, {package_data is not None}, {providers_data is not None} ')
 
         purl_handler = self._purl_handler(url)
         logging.debug(f'Purl: lookup_url: {purl_handler}')

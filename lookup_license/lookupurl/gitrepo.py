@@ -172,6 +172,7 @@ class GitRepo(LookupURL):
         return suggestions
 
     def lookup_url_impl(self, url, package_data=None, providers_data=None):
+        logging.debug(f'{self.__class__.__name__}:lookup_url_impl {url}, {package_data is not None}, {providers_data is not None}')
         if url.startswith('pkg:'):
             # purl
             purl_object = PackageURL.from_string(url)
@@ -191,6 +192,7 @@ class GitRepo(LookupURL):
         return ret
 
     def name(self):
+        logging.debug(f'{self.__class__.__name__}:name()')
         return 'GitRepo'
 
     def gitrepo_repo(self, url):
@@ -202,9 +204,9 @@ class GitRepo(LookupURL):
         if 'github.com' in url:
             url = self.gitrepo_repo(url)
             ret = f'{url}/tree/{version}'
-            logging.debug(f'gitrepo_with_version({url}, {version}) => {ret}')
+            logging.debug(f'gitrepo_with_version {url}, {version}) => {ret}')
             return ret
-        logging.debug(f'gitrepo_with_version({url}, {version}) => None')
+        logging.debug(f'gitrepo_with_version {url}, {version} => None')
 
     def gitrepo_zip_file(self, url, version):
         if not url:
