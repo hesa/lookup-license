@@ -26,7 +26,7 @@ class ClearlyDefined(LicenseProvider):
         coord_url = f'https://api.clearlydefined.io/definitions/{coord}'
         return coord_url
 
-    def parameters_to_coordinate_url(self, pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers=None, pkg_subpath=None):
+    def parameters_to_url(self, pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers=None, pkg_subpath=None):
         if pkg_version:
             pkg_version_str = f'/{pkg_version}'
         else:
@@ -43,7 +43,7 @@ class ClearlyDefined(LicenseProvider):
         return coord_url
 
     def lookup_license_package_impl(self, orig_url, pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers=None, pkg_subpath=None):
-        coord_url = self.parameters_to_coordinate_url(pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers, pkg_subpath)
+        coord_url = self.parameters_to_url(pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers, pkg_subpath)
         return self.lookup_license_impl(coord_url)
 
     def lookup_license_impl(self, url):
@@ -52,7 +52,7 @@ class ClearlyDefined(LicenseProvider):
         if url.startswith('pkg:'):
             # Try url as a purl
             try:
-                coord_url = self.purl_to_coordinate_url(url)
+                coord_url = self.purl_to_url(url)
             except Exception:
                 logging.debug(f'Could not convert {url} to a coordinate')
                 coord_url = None
