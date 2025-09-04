@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+from lookup_license.config import http_timeout
+
 import logging
 import magic
 import requests
@@ -38,7 +40,7 @@ class Retriever():
 
     def download_url(self, url):
         logging.info(f'download: {url}')
-        response = requests.get(url, stream=True, timeout=5)
+        response = requests.get(url, stream=True, timeout=http_timeout)
         content = response.content
         code = response.status_code
         decoded_content = content.decode('utf-8')
