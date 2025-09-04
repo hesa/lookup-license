@@ -26,5 +26,5 @@ class LicenseProvider():
         data['status'] = data['license'] is not None
         return data
 
-    def parameters_to_coordinate_url(self, pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers=None, pkg_subpath=None):
-        raise Exception('Subclasses to LicenseProvider must implment: parameters_to_coordinate_url')
+    def parameters_to_url(self, pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers=None, pkg_subpath=None):
+        raise Exception('Subclasses to LicenseProvider must implment: parameters_to_url')
