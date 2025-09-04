@@ -12,7 +12,7 @@ class LicenseProviders:
     def __init__(self):
         self.provider_list = [
             ClearlyDefined(),
-            PurlDB()
+            PurlDB(),
         ]
         self.name_namespace_map = {
             'pypi': 'pypi',
@@ -21,7 +21,7 @@ class LicenseProviders:
 
     def providers(self):
         return [x.name() for x in self.provider_list]
-    
+
     def lookup_license_package(self, orig_url, pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers=None, pkg_subpath=None):
         logging.debug(f'{self.__class__.__name__}:lookup_license_package {orig_url}, {pkg_type}, {pkg_namespace}, {pkg_name}, {pkg_version}, {pkg_qualifiers}, {pkg_subpath}')
         providers = {}
@@ -31,10 +31,7 @@ class LicenseProviders:
 
         for provider in self.provider_list:
             name = provider.name()
-            print(" ---- name " + name)
             provider_data = provider.lookup_license_package(orig_url, pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers, pkg_subpath)
-            print(" ---- pd " + str(provider_data))
             providers[name] = provider_data
 
         return providers
-    
