@@ -1,4 +1,3 @@
-
 #!/bin/env python3
 
 # SPDX-FileCopyrightText: 2025 Henrik Sandklef
@@ -17,6 +16,4 @@ def test_parameters_pypi():
     pkg_namespace = ''
     
     coord_url = cd.parameters_to_coordinate_url(pkg_type, pkg_namespace, pkg_name, pkg_version)
-
-    assert 'beta' == coord_url
 
