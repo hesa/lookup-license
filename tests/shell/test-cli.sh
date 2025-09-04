@@ -42,10 +42,11 @@ SWIFT_PACKAGES=("pkg:swift/github.com/google/abseil-cpp-binary@1.2024011602.0;Ap
 GEM_PACKAGES=("pkg:gem/google-apis-core@0.11.1;Apache-2.0"
               "pkg:gem/google-cloud-env@1.6.0;Apache-2.0 AND NOASSERTION"
               "pkg:gem/aws-sdk-s3@1.135.0;Apache-2.0 AND NOASSERTION"
+              "pkg:gem/google-cloud-env@2.3.0;Apache-2.0 AND LicenseRef-scancode-generic-cla"
               )
+
 URLS=("https://github.com/postmodern/digest-crc/blob/main/LICENSE.txt;MIT"
       "https://raw.githubusercontent.com/postmodern/digest-crc/main/LICENSE.txt;MIT"
-      "https://rubygems.org/gems/google-cloud-env/versions/2.3.0;Apache-2.0"
      )
 
 URLS_TEXT=("https://raw.githubusercontent.com/postmodern/digest-crc/main/LICENSE.txt;MIT"
@@ -158,7 +159,12 @@ test_purl_swift_licenses()
         swift_value=${SWIFT_PACKAGES[$i]}
         local URL="$(echo $swift_value | cut -d ";" -f 1)"
         local LIC="$(echo $swift_value | cut -d ";" -f 2)"
-        url_license "$URL"    "$LIC" " --purl "
+
+        # only use "--purl" if it url begins with "pkg:"
+        if [ $(echo $URL | grep -c "^pkg:") -ne 0 ]
+        then
+            url_license "$URL"    "$LIC" " --purl "
+        fi
         
         local PKG="$(basename $URL | sed 's,:,,g')"
         url_license "$PKG"    "$LIC" " --swift "
@@ -166,6 +172,7 @@ test_purl_swift_licenses()
         then
             break
         fi
+
     done
     echo
 }
@@ -181,7 +188,12 @@ test_purl_gem_licenses()
         gem_value=${GEM_PACKAGES[$i]}
         local URL="$(echo $gem_value | cut -d ";" -f 1)"
         local LIC="$(echo $gem_value | cut -d ";" -f 2)"
-        url_license "$URL"    "$LIC" " --purl "
+
+        # only use "--purl" if it url begins with "pkg:"
+        if [ $(echo $URL | grep -c "^pkg:") -ne 0 ]
+        then
+            url_license "$URL"    "$LIC" " --purl "
+        fi
         
         local PKG="$(echo $URL | sed 's,pkg:[a-z]*/,,g')"
         url_license "$PKG"    "$LIC" " --gem "
@@ -189,6 +201,14 @@ test_purl_gem_licenses()
         then
             break
         fi
+
+        local PKG="https://rubygems.org/gems/$(echo $PKG | sed 's,@,/versions/,')"
+        url_license "$PKG"    "$LIC" " --pypi "
+        if [ "$LIMITED_TEST" = "True" ]
+        then
+            break
+        fi
+        
     done
 
     echo
@@ -205,11 +225,21 @@ test_purl_pypi_licenses()
         pypi_value=${PYPI_PACKAGES[$i]}
         local URL="$(echo $pypi_value | cut -d ";" -f 1)"
         local LIC="$(echo $pypi_value | cut -d ";" -f 2)"
-#        echo; echo url_license " --purl $URL"; echo
-        url_license "$URL"    "$LIC" " --purl "
+
+        # only use "--purl" if it url begins with "pkg:"
+        if [ $(echo $URL | grep -c "^pkg:") -ne 0 ]
+        then
+            url_license "$URL"    "$LIC" " --purl "
+        fi
         
         local PKG="$(echo $URL | sed 's,pkg:[a-z]*/,,g')"
-#        echo; echo        url_license "  --pypi $PKG" ; echo
+        url_license "$PKG"    "$LIC" " --pypi "
+        if [ "$LIMITED_TEST" = "True" ]
+        then
+            break
+        fi
+
+        local PKG="https://pypi.org/project/$(echo $PKG | sed 's,@,/,')"
         url_license "$PKG"    "$LIC" " --pypi "
         if [ "$LIMITED_TEST" = "True" ]
         then
