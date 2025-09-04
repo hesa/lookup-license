@@ -2,28 +2,25 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from purltools import purl2clearlydefined  # noqa: I900
 from lookup_license.lookupurl.license_provider import LicenseProvider
 from lookup_license.retrieve import Retriever
 
 import json
 import logging
 
-LICENSE_EXPRESSION_PATH = 'licensed.facets.core.discovered.expressions'
-
 class PurlDB(LicenseProvider):
 
     def name(self):
         return 'https://public.purldb.io'
-# 
+
+    def parameters_to_url(self, pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers=None, pkg_subpath=None):
+        purl = f'pkg:{pkg_type}/{pkg_namespace}/{pkg_name}@{pkg_version}'
+        purldb_url = f'https://public.purldb.io/api/collect/?purl={purl}'
+        return purldb_url
+
     def lookup_license_package_impl(self, orig_url, pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers=None, pkg_subpath=None):
-        if pkg_version:
-            pkg_version_str = f'/{pkg_version}'
-        else:
-            pkg_version_str = ''
-        coordinates = f'{pkg_type}/{pkg_namespace}/-/{pkg_name}{pkg_version_str}'
-        coord_url = f'https://public.purldb.io/api/{coordinates}'
-        return self.lookup_license_impl(coord_url)
+        purldb_url = self.parameters_to_url(pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers, pkg_subpath)
+        return self.lookup_license_impl(purldb_url)
 
     def lookup_license_impl(self, url):
         retriever = Retriever()
@@ -31,23 +28,23 @@ class PurlDB(LicenseProvider):
         if url.startswith('pkg:'):
             # Try url as a purl
             try:
-                coord_url = self.purl_to_coordinate_url(url)
+                purldb_url = self.purl_to_url(url)
             except Exception:
-                logging.debug(f'Could not convert {url} to a coordinate')
-                coord_url = None
+                logging.debug(f'Could not convert {url} to a purldb url')
+                purldb_url = None
         else:
-            coord_url = url
+            purldb_url = url
 
-        if coord_url:
+        if purldb_url:
             try:
-                retrieved_result = retriever.download_url(coord_url)
+                retrieved_result = retriever.download_url(purldb_url)
                 success = retrieved_result['success']
-            except Exception:
+            except Exception as e:
                 success = False
-                error_msg = f'Coult not download {coord_url}.'
+                error_msg = f'Coult not download {purldb_url}. Exception: {e}.'
         else:
             success = False
-            error_msg = f'Coult not convert {url} to a coordinate.'
+            error_msg = f'Coult not convert {url} to a purldb url.'
 
         if not success:
             identified_license = None
@@ -56,20 +53,20 @@ class PurlDB(LicenseProvider):
             json_data = json.loads(decoded_content)
 
             try:
-                inner_json = json_data
-                for key in LICENSE_EXPRESSION_PATH.split('.'):
-                    inner_json = inner_json.get(key)
-                inner_json.sort()
-                identified_license = ' AND '.join(inner_json)
+                licenses = []
+                for lic_det in json_data[0]['license_detections']:
+                    licenses.append(lic_det['license_expression_spdx'])
+                licenses.sort()
+                identified_license = ' AND '.join(licenses)
             except Exception:
-                logging.debug(f'Failed getting data from clearlydefined, with "{key}" out of {LICENSE_EXPRESSION_PATH}')
-                error_msg = f'Failed getting data from clearlydefined, with "{key}" out of {LICENSE_EXPRESSION_PATH}'
+                error_msg = 'Failed getting data from purldb'
+                logging.debug(error_msg)
                 identified_license = None
 
         ret = {
             'license': identified_license,
-            'data_url': coord_url,
-            'data_path': LICENSE_EXPRESSION_PATH,
+            'data_url': purldb_url,
+            'data_path': '[0].["license_detections"]["license_expression_spdx"]',
             'error_message': error_msg,
         }
         return ret
