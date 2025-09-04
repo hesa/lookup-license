@@ -127,11 +127,11 @@ def license_url(ll, url):
     return result
 
 def gitrepo_url(ll, url):
-    result = LookupURLFactory.lookupurl('gitrepo').lookup_url(url)
+    result = LookupURLFactory.lookupurl('git').lookup_url(url)
     return result
 
 def purl_url(ll, url):
-    result = LookupURLFactory.lookupurl('purl').lookup_url(url)
+    result = LookupURLFactory.lookupurl_url(url).lookup_url(url)
     return result
 
 def swift_url(ll, url):

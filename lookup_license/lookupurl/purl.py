@@ -12,7 +12,15 @@ from lookup_license.lookupurl.pypi import Pypi
 from lookup_license.lookupurl.swift import Swift
 from lookup_license.lookupurl.gitrepo import GitRepo
 
+from enum import Enum
 import logging
+
+class Ecosystem(Enum):
+    PYPI = 'pypi'
+    GITREPO = 'git'
+    SWIFT = 'swift'
+    GEM = 'gem'
+
 
 class Purl(LookupURL):
 

@@ -4,7 +4,7 @@
 
 from lookup_license.lookupurl.lookupurl import LookupURL
 from lookup_license.lookupurl.gitrepo import GitRepo
-from lookup_license.lookupurl.clearlydefined import ClearlyDefined
+from lookup_license.lookupurl.license_providers import LicenseProviders
 
 from lookup_license.retrieve import Retriever
 from lookup_license.lookupurl.fixes import fix_url
@@ -118,6 +118,7 @@ class Gem(LookupURL):
         return json_data['version']
 
     def lookup_package(self, url):
+        logging.debug(f'{self.__class__.__name__}:lookup_package {url}')
         url = url.strip('/')
 
         # example url to suggest: https://rubygems.org/api/v2/rubygems/google-cloud-env/versions/1.6.0.json
@@ -184,10 +185,11 @@ class Gem(LookupURL):
 
         return identified_gem_data
 
-    def clearly_defined_url(self, url, version=None):
+    def _get_parameters(self, url, version=None):
         if url.startswith('pkg:'):
-            # purl is supported by clearlydefined, so just pass the url as it is
-            return url
+            purl_dict = PackageURL.from_string(url).to_dict()
+            pkg_name = purl_dict['name']
+            pkg_version = purl_dict['version']
         elif url.startswith('http'):
             # https  (e.g. https://rubygems.org/gems/google-cloud-env/versions/2.3.0)
             new_url = url.replace('https://rubygems.org/gems/', '')
@@ -195,21 +197,32 @@ class Gem(LookupURL):
             splits = new_url.split('@')
             if len(splits) < 2:
                 raise Exception(f'Gem package must have name and version (name@version): {url}')
-            return ClearlyDefined().parameters_to_coordinate_url('gem', 'rubygems', splits[0], splits[1])
+            pkg_name = splits[0]
+            pkg_version = splits[1]
         else:
             splits = url.split('@')
-            return ClearlyDefined().parameters_to_coordinate_url('gem', 'rubygems', splits[0], splits[1])
+            pkg_name = splits[0]
+            pkg_version = splits[1]
+
+        return {
+            'name': pkg_name,
+            'version': pkg_version,
+        }
 
     def lookup_providers(self, url, version=None):
-        providers = {}
+        logging.debug(f'{self.__class__.__name__}:lookup_providers {url}, {version}')
 
-        cd = ClearlyDefined()
-        cd_url = self.clearly_defined_url(url, version)
-        providers[cd.name()] = cd.lookup_license(cd_url)
+        parameters = self._get_parameters(url, version)
+        logging.debug(f'{self.__class__.__name__}:lookup_providers parameters: {parameters}')
+
+        # Identify licenses at providers
+        providers = LicenseProviders().lookup_license_package(url, 'gem', 'rubygems', parameters['name'], parameters['version'])
+        logging.debug(f'{self.__class__.__name__}:lookup_providers_impl providers: {providers}')
 
         return providers
 
     def lookup_url_impl(self, url, package_data=None, providers_data=None):
+        logging.debug(f'{self.__class__.__name__}:lookup_url_impl {url}, {package_data is not None}, {providers_data is not None} ')
 
         if not package_data:
             return None

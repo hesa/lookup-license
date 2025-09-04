@@ -8,6 +8,51 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 You can use lookup-license to identify the license, using the Naive license identify as described below, for a purl package. 
 
+## Pypi
+
+Look up license for gem package `pkg:pypi/boto3@1.35.99`:
+
+```
+$ ./devel/lookup-license --purl pkg:pypi/boto3@1.35.99
+Apache-2.0 AND License :: OSI Approved :: Apache Software License
+```
+
+Look up license for gem package `pkg:pypi/boto3@1.35.99` with verbose output:
+
+```
+$ lookup-license --purl pkg:pypi/boto3@1.35.99 -v
+Identified license:  Apache-2.0 AND License :: OSI Approved :: Apache Software License AND LicenseRef-scancode-unknown-license-reference
+Supplied url:        pkg:pypi/boto3@1.35.99
+Supplied url type:   Pypi
+
+Url details:
+------------
+Provided:            https://github.com/boto/boto3
+Url type:            GitRepo
+License:             Apache-2.0
+Identifications:
+ * https://raw.githubusercontent.com/boto/boto3/master/LICENSE: Apache-2.0
+
+Package details:
+----------------
+Name:                boto3
+Version:             1.35.99
+Type:                Pypi
+Url:                 https://pypi.org/pypi/boto3/1.35.99/json
+Homepage:            https://github.com/boto/boto3
+License:             License :: OSI Approved :: Apache Software License AND Apache License 2.0
+Identifications:
+ * https://pypi.org/pypi/boto3/1.35.99/json: License :: OSI Approved :: Apache Software License
+ * https://pypi.org/pypi/boto3/1.35.99/json: Apache License 2.0
+
+Providers details:
+------------------
+Identifications:
+ * https://api.clearlydefined.io/definitions/pypi/pypi/-/boto3/1.35.99: Apache-2.0 AND Apache-2.0 AND LicenseRef-scancode-unknown-license-reference
+ * https://public.purldb.io/api/collect/?purl=pkg:pypi/pypi/boto3@1.35.99: Apache-2.0
+```
+
+
 ## Gem
 
 Look up license for gem package `pkg:gem/google-apis-core@0.11.1`:
@@ -15,23 +60,6 @@ Look up license for gem package `pkg:gem/google-apis-core@0.11.1`:
 ```
 $ lookup-license --purl pkg:gem/google-apis-core@0.11.1
 Apache-2.0
-```
-
-Look up license for gem package `pkg:gem/google-apis-core@0.11.1` with verbose output:
-
-```
-$ lookup-license --purl pkg:gem/google-apis-core@0.11.1 -v
-Name:                google-apis-core
-Version:             0.11.1
-Homepage:            https://github.com/google/google-api-ruby-client
-Repository:          https://github.com/googleapis/google-api-ruby-client/tree/0.11.1
-Original url:        pkg:gem/google-apis-core@0.11.1
-License identified:  Apache-2.0
-License identified in repository:
- * Apache-2.0 <-- https://raw.githubusercontent.com/googleapis/google-api-ruby-client/refs/tags/0.11.1/LICENSE
- * Apache-2.0 <-- https://raw.githubusercontent.com/googleapis/google-api-ruby-client/refs/tags/0.11.1/README.md
-License identified in package configuration:
- * Apache-2.0 <-- https://rubygems.org/api/v2/rubygems/google-apis-core/versions/0.11.1.json
 ```
 
 ## Github
@@ -51,15 +79,6 @@ Currently not supported.
 ## Maven
 
 Currently not supported.
-
-## Pypi
-
-Look up license for gem package `pkg:pypi/boto3@1.35.99`:
-
-```
-$ ./devel/lookup-license --purl pkg:pypi/boto3@1.35.99
-Apache-2.0 AND License :: OSI Approved :: Apache Software License
-```
 
 ## Swift
 
