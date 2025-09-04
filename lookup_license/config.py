@@ -5,6 +5,7 @@
 lookup_license_version = "0.1.20"
 
 default_minimum_score = 0.9
+http_timeout = 10 # seconds
 
 module_name = 'lookup_license'
 
