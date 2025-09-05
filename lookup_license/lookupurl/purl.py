@@ -20,6 +20,7 @@ class Ecosystem(Enum):
     GITREPO = 'git'
     SWIFT = 'swift'
     GEM = 'gem'
+    MAVEN = 'maven'
 
 
 class Purl(LookupURL):
@@ -37,6 +38,7 @@ class Purl(LookupURL):
             'pypi': Pypi,
             'github': GitRepo,
             'gem': Gem,
+            'maven': Maven,
         }
         return _purl_handlers[purl_object.type]()
 
