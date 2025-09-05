@@ -90,6 +90,11 @@ def get_parser():
                         help='try to read license from rubygems.org package (no scanning)',
                         default=False)
 
+    parser.add_argument('--maven',
+                        action='store_true',
+                        help='try to read license from maven (no scanning)',
+                        default=False)
+
     parser.add_argument('-s', '--shell',
                         action='store_true',
                         help='interactive shell',
@@ -144,6 +149,10 @@ def pypi_url(ll, url):
 
 def gem_url(ll, url):
     result = LookupURLFactory.lookupurl('gem').lookup_url(url)
+    return result
+
+def maven_url(ll, url):
+    result = LookupURLFactory.lookupurl('maven').lookup_url(url)
     return result
 
 def license_text(ll, texts, minimum_score):
@@ -227,6 +236,9 @@ def main():
                     out, err = formatter.format_lookup_urls(result, args.verbose)
                 elif args.gem:
                     result = gem_url(ll, args.input[0])
+                    out, err = formatter.format_lookup_urls(result, args.verbose)
+                elif args.maven:
+                    result = maven_url(ll, args.input[0])
                     out, err = formatter.format_lookup_urls(result, args.verbose)
                 else:
                     result = license_text(ll, args.input, float(args.minimum_score))
