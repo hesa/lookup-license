@@ -35,9 +35,9 @@ class ClearlyDefined(LicenseProvider):
         if pkg_namespace:
             pkg_namespace_str = f'/{pkg_namespace}'
         else:
-            pkg_namespace_str = ''
+            pkg_namespace_str = '/-'
 
-        coordinates = f'{pkg_type}{pkg_namespace_str}/-/{pkg_name}{pkg_version_str}'
+        coordinates = f'{pkg_type}{pkg_namespace_str}/{pkg_name}{pkg_version_str}'
         coord_url = f'https://api.clearlydefined.io/definitions/{coordinates}'
 
         return coord_url
