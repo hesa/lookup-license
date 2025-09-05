@@ -9,12 +9,11 @@ from lookup_license.lookupurl.purl import Ecosystem
 from lookup_license.lookupurl.url import Url
 from lookup_license.lookupurl.pypi import Pypi
 from lookup_license.lookupurl.swift import Swift
+from lookup_license.lookupurl.maven import Maven
+
+from lookup_license.utils import contains
 
 import logging
-
-def _contains(url, strings):
-    res = any(map(url.__contains__, strings))
-    return res
 
 class LookupURLFactory:
 
@@ -32,6 +31,8 @@ class LookupURLFactory:
             Ecosystem.SWIFT: Swift,
             Ecosystem.GEM: Gem,
             Ecosystem.GEM.value: Gem,
+            Ecosystem.MAVEN: Maven,
+            Ecosystem.MAVEN.value: Maven,
         }
         try:
             lookup_class = _lookup_map[url_type]
@@ -45,12 +46,14 @@ class LookupURLFactory:
         if not url.startswith('pkg:'):
             raise Exception(f'Purl "{url}" not a valid purl.')
         url_type = None
-        if _contains(url, ['gem', 'rubygems']):
+        if contains(url, ['gem', 'rubygems']):
             url_type = Ecosystem.GEM
-        elif _contains(url, ['pypi']):
+        elif contains(url, ['pypi']):
             url_type = Ecosystem.PYPI
-        elif _contains(url, ['swift']):
+        elif contains(url, ['swift']):
             url_type = Ecosystem.SWIFT
+        elif contains(url, ['maven']):
+            url_type = Ecosystem.MAVEN
 
         if not url_type:
             raise Exception(f'Purl "{url}" not supported.')
