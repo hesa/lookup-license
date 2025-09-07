@@ -40,16 +40,6 @@ def get_parser():
                         type=str,
                         default='text')
 
-    parser.add_argument('-nc', '--no-cache',
-                        action='store_true',
-                        help='don\'t use cache ',
-                        default=False)
-
-    parser.add_argument('--clear-cache',
-                        action='store_true',
-                        help='clear the cache ',
-                        default=False)
-
     parser.add_argument('-uc', '--update-cache',
                         action='store_true',
                         help='if the url is already in the cache, update with a new value. This will automatically disable using the cached values',
@@ -110,10 +100,26 @@ def get_parser():
                         help=f'minimum required score when identifying a license from license text, defaults to {lookup_license.config.default_minimum_score}',
                         default=lookup_license.config.default_minimum_score)
 
+    parser.add_argument('-nc', '--no-cache',
+                        action='store_true',
+                        help='don\'t use cache ',
+                        default=False)
+
+    parser.add_argument('--clear-cache',
+                        action='store_true',
+                        help='clear the cache ',
+                        default=False)
+
+    parser.add_argument('--list-cache',
+                        action='store_true',
+                        help='output the content of the cache (and exit)',
+                        default=False)
+
     parser.add_argument('input',
                         type=str,
                         nargs="*",
                         help='license string, license file')
+
     return parser
 
 def parse():
@@ -159,6 +165,10 @@ def license_text(ll, texts, minimum_score):
     result = ll.lookup_license_text(" ".join(texts), minimum_score)
     return result
 
+def output_cache(args):
+    result = LookupLicenseCache().list_cache()
+    return result
+
 def interactive_shell(ll):
     return LookupLicenseShell().cmdloop()
 
@@ -188,14 +198,20 @@ def main():
 
     ll = LookupLicense()
 
+    formatter = FormatterFactory.formatter(args.output_format)
+
+    if args.list_cache:
+        cache_list = output_cache(args)
+        out, err = formatter.format_cache(cache_list, args.verbose)
+        print(out)
+        sys.exit(0)
+    
     try:
         if args.version:
             print(str(version_info(ll, args)))
         elif args.shell:
             return interactive_shell(ll)
         else:
-            formatter = FormatterFactory.formatter(args.output_format)
-
             # no command line arguments
             # read license text from stdin
             if args.input == []:
