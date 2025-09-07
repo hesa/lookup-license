@@ -13,10 +13,18 @@ python: py-test py-lint
 
 py-test: 
 	PYTHONPATH=. tests/shell/test-interactive.sh 1
-	PYTHONPATH=. tests/shell/test-cli.sh --limited
 	PYTHONPATH=. tests/shell/test-multiple.sh 1
 	PYTHONPATH=. pytest tests/python/
 	@echo python tests passed
+
+py-test-more: py-test
+	PYTHONPATH=. tests/shell/test-cli.sh --limited
+
+py-test-most: py-test
+	PYTHONPATH=. tests/shell/test-cli.sh
+
+py-test-cli:
+	PYTHONPATH=. tests/shell/test-cli.sh
 
 py-lint:
 	flake8
