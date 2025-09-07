@@ -27,6 +27,9 @@ class Formatter:
     def format_error(self, exception, verbose=False):
         return None, None
 
+    def format_cache(self, entries, verbose=False):
+        return None, None
+
     def format_lookup_urls(self, looked_up_urls, verbose=False):
         return None, None
 
@@ -37,6 +40,9 @@ class JsonFormatter(Formatter):
 
     def format_error(self, exception, verbose=False):
         return json.dumps(exception), None
+
+    def format_cache(self, entries, verbose=False):
+        return json.dumps(entries), None
 
     def format_lookup_urls(self, looked_up_urls, verbose=False):
         return json.dumps(looked_up_urls, indent=4), None
@@ -85,6 +91,9 @@ class TextFormatter(Formatter):
         if not lic:
             return '<no license found>'
         return lic
+
+    def format_cache(self, entries, verbose=False):
+        return '\n'.join(list(entries)), None
 
     def format_lookup_urls(self, looked_up_urls, verbose=False):
         if not looked_up_urls:
