@@ -14,4 +14,3 @@ def get_keypath(data, path):
 def contains(url, strings):
     res = any(map(url.__contains__, strings))
     return res
-
