@@ -4,6 +4,7 @@
 
 from pathlib import Path
 from diskcache import Cache
+from datetime import datetime
 
 import logging
 
@@ -63,3 +64,9 @@ class LookupLicenseCache():
 
     def cache(self):
         return self.cache
+
+    def list_cache(self):
+        entries = {}
+        for entry_key in self.cache:
+            entries[entry_key] = self.cache[entry_key]
+        return entries
