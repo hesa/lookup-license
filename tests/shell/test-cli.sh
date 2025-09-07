@@ -33,7 +33,7 @@ then
 #    echo "All tests"
 fi
 
-PYPI_PACKAGES=("pkg:pypi/boto3@1.35.99;Apache-2.0 AND License :: OSI Approved :: Apache Software License AND LicenseRef-scancode-unknown-license-reference"
+PYPI_PACKAGES=("pkg:pypi/boto3@1.35.99;Apache-2.0 AND License :: OSI Approved :: Apache Software License"
                "pkg:pypi/click@8.1.8;BSD-3-Clause AND License :: OSI Approved :: BSD License"
               )
 SWIFT_PACKAGES=("pkg:swift/github.com/google/abseil-cpp-binary@1.2024011602.0;Apache-2.0"
@@ -182,7 +182,7 @@ test_purl_gem_licenses()
 {
     echo "Check Purls - Gem"
 
-    # purl / pypi
+    # purl / gem
     for i in ${!GEM_PACKAGES[@]}
     do
         gem_value=${GEM_PACKAGES[$i]}
@@ -203,7 +203,7 @@ test_purl_gem_licenses()
         fi
 
         local PKG="https://rubygems.org/gems/$(echo $PKG | sed 's,@,/versions/,')"
-        url_license "$PKG"    "$LIC" " --pypi "
+        url_license "$PKG"    "$LIC" " --gem "
         if [ "$LIMITED_TEST" = "True" ]
         then
             break

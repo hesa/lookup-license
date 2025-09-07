@@ -17,6 +17,7 @@ class LicenseProviders:
         self.name_namespace_map = {
             'pypi': 'pypi',
             'gem': 'rubygems',
+            'gem/rubygems': None,
         }
 
     def providers(self):

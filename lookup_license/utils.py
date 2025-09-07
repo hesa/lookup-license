@@ -10,3 +10,7 @@ def get_keypath(data, path):
         except Exception:
             return None
     return inner_data
+
+def contains(url, strings):
+    res = any(map(url.__contains__, strings))
+    return res

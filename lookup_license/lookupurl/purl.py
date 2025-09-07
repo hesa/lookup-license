@@ -11,6 +11,7 @@ from lookup_license.lookupurl.gem import Gem
 from lookup_license.lookupurl.pypi import Pypi
 from lookup_license.lookupurl.swift import Swift
 from lookup_license.lookupurl.gitrepo import GitRepo
+from lookup_license.lookupurl.maven import Maven
 
 from enum import Enum
 import logging
@@ -20,6 +21,7 @@ class Ecosystem(Enum):
     GITREPO = 'git'
     SWIFT = 'swift'
     GEM = 'gem'
+    MAVEN = 'maven'
 
 
 class Purl(LookupURL):
@@ -37,6 +39,7 @@ class Purl(LookupURL):
             'pypi': Pypi,
             'github': GitRepo,
             'gem': Gem,
+            'maven': Maven,
         }
         return _purl_handlers[purl_object.type]()
 
