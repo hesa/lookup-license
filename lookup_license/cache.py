@@ -2,9 +2,11 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from pathlib import Path
+from lookup_license.config import module_name
+from lookup_license.config import module_author
+
 from diskcache import Cache
-from datetime import datetime
+from appdirs import user_cache_dir
 
 import logging
 
@@ -12,9 +14,13 @@ class LookupLicenseCache():
 
     def _init_cache(self, update=False):
         logging.debug('LookupLicenseCache _init_cache')
-        self.cache = Cache(f'{Path.home()}/.ll/')
+        cache_dir = self.cache_location()
+        self.cache = Cache(cache_dir)
         self.enabled = True
         self.update_mode = update
+
+    def cache_location(self):
+        return user_cache_dir(module_name, module_author)
 
     def set_update_mode(self, enable_update=True):
         self.update_mode = enable_update
