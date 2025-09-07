@@ -216,7 +216,7 @@ class Gem(LookupURL):
         logging.debug(f'{self.__class__.__name__}:lookup_providers parameters: {parameters}')
 
         # Identify licenses at providers
-        providers = LicenseProviders().lookup_license_package(url, 'gem', 'rubygems', parameters['name'], parameters['version'])
+        providers = LicenseProviders().lookup_license_package(url, 'gem/rubygems', None, parameters['name'], parameters['version'])
         logging.debug(f'{self.__class__.__name__}:lookup_providers_impl providers: {providers}')
 
         return providers
