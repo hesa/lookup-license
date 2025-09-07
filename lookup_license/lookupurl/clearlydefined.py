@@ -22,11 +22,15 @@ class ClearlyDefined(LicenseProvider):
         return purl2clearlydefined(purl)
 
     def purl_to_coordinate_url(self, purl):
+        logging.debug(f'{self.__class__.__name__}:purl_to_coordinate_url {purl}')
         coord = purl2clearlydefined(purl)
+        logging.debug(f'{self.__class__.__name__}:purl_to_coordinate_url {purl} => coord: {coord}')
         coord_url = f'https://api.clearlydefined.io/definitions/{coord}'
+        logging.debug(f'{self.__class__.__name__}:purl_to_coordinate_url {purl} => coord: {coord} => {coord_url}')
         return coord_url
 
     def parameters_to_url(self, pkg_type, pkg_namespace, pkg_name, pkg_version, pkg_qualifiers=None, pkg_subpath=None):
+        logging.debug(f'{self.__class__.__name__}:parameters_to_url {pkg_type}, {pkg_namespace}, {pkg_name}, {pkg_version}, {pkg_qualifiers}, {pkg_subpath}')
         if pkg_version:
             pkg_version_str = f'/{pkg_version}'
         else:
@@ -39,6 +43,7 @@ class ClearlyDefined(LicenseProvider):
 
         coordinates = f'{pkg_type}{pkg_namespace_str}/{pkg_name}{pkg_version_str}'
         coord_url = f'https://api.clearlydefined.io/definitions/{coordinates}'
+        logging.debug(f'{self.__class__.__name__}:parameters_to_url {pkg_type}, {pkg_namespace}, {pkg_name}, {pkg_version}, {pkg_qualifiers}, {pkg_subpath} => {coord_url}')
 
         return coord_url
 
