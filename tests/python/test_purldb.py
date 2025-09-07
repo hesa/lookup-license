@@ -24,4 +24,4 @@ def test_parameters_gem():
 # maven
 def test_parameters_maven():
     purldb_url = pdb.parameters_to_url('maven', 'mavencentral', 'google-apis-core', '0.11.1')
-    assert 'https://public.purldb.io/api/collect/?purl=pkg:gem/rubygems/google-apis-core@0.11.1' == purldb_url
+    assert 'https://public.purldb.io/api/collect/?purl=pkg:maven/mavencentral/google-apis-core@0.11.1' == purldb_url
