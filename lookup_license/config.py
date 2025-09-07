@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+module_name = 'lookup_license'
+module_author = 'hesa'
 lookup_license_version = "0.1.23"
 
 default_minimum_score = 0.9
