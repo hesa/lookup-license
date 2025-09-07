@@ -102,17 +102,17 @@ def get_parser():
 
     parser.add_argument('-nc', '--no-cache',
                         action='store_true',
-                        help='don\'t use cache ',
+                        help=f'don\'t use cache  ({LookupLicenseCache().cache_location()}).',
                         default=False)
 
     parser.add_argument('--clear-cache',
                         action='store_true',
-                        help='clear the cache ',
+                        help=f'clear the cache ({LookupLicenseCache().cache_location()}).',
                         default=False)
 
     parser.add_argument('--list-cache',
                         action='store_true',
-                        help='output the content of the cache (and exit)',
+                        help=f'output the content of the cache ({LookupLicenseCache().cache_location()}) and exit.',
                         default=False)
 
     parser.add_argument('input',
@@ -205,7 +205,7 @@ def main():
         out, err = formatter.format_cache(cache_list, args.verbose)
         print(out)
         sys.exit(0)
-    
+
     try:
         if args.version:
             print(str(version_info(ll, args)))
