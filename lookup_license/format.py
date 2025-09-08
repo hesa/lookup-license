@@ -24,6 +24,9 @@ class Formatter:
     def format_license(self, lic, verbose=False):
         return None, None
 
+    def format_resources(self, resources, verbose=False):
+        return None
+
     def format_error(self, exception, verbose=False):
         return None, None
 
@@ -40,6 +43,9 @@ class JsonFormatter(Formatter):
 
     def format_error(self, exception, verbose=False):
         return json.dumps(exception), None
+
+    def format_resources(self, resources, verbose=False):
+        return json.dumps(resources, indent=4)
 
     def format_cache(self, entries, verbose=False):
         return json.dumps(entries), None
