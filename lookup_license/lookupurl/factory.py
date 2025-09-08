@@ -59,3 +59,7 @@ class LookupURLFactory:
             raise Exception(f'Purl "{url}" not supported.')
 
         return LookupURLFactory.lookupurl(url_type)
+
+    @staticmethod
+    def package_types():
+        return [e.value for e in Ecosystem]
