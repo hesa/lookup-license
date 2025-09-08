@@ -243,3 +243,20 @@ class LookupLicense():
         res['tried_urls'] = retrieved_result['tried_urls']
 
         return res
+
+    def list_resources(self):
+        from lookup_license.lookupurl.license_providers import LicenseProviders
+        license_providers = LicenseProviders().providers()
+
+        from lookup_license.lookupurl.factory import LookupURLFactory
+        package_types = LookupURLFactory().package_types()
+
+        from lookup_license.lookupurl.gitrepo import GitRepo
+        repos = GitRepo().supported_hosts()
+
+        return {
+            'resources': ['file', 'url', 'purl', 'gitrepo', 'packages'],
+            'git-hosts': repos,
+            'license-providers': license_providers,
+            'package-types': package_types,
+        }
