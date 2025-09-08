@@ -101,13 +101,19 @@ class TextFormatter(Formatter):
     def format_cache(self, entries, verbose=False):
         return '\n'.join(list(entries)), None
 
+
+    def _format_resource_add(self, title, items, store):
+        sep = '\n * '
+        store.append(f'{title}')
+        items_str = f' * {sep.join(items)}'
+        store.append(items_str)
+        
     def format_resources(self, resources, verbose=False):
-        nl = '\n'
         ret = []
-        ret.append(f'Resources:         {nl} * {"\n * ".join(resources["resources"])}')
-        ret.append(f'Git hosts:         {nl} * {"\n * ".join(resources["git-hosts"])}')
-        ret.append(f'License providers: {nl} * {"\n * ".join(resources["license-providers"])}')
-        ret.append(f'Package types:     {nl} * {"\n * ".join(resources["package-types"])}')
+        self._format_resource_add('Resources', resources["resources"], ret)
+        self._format_resource_add('Git hosts', resources["git-hosts"], ret)
+        self._format_resource_add('License providers', resources["license-providers"], ret)
+        self._format_resource_add('Package types', resources["package-types"], ret)
         return '\n'.join(ret)
 
     def format_lookup_urls(self, looked_up_urls, verbose=False):
