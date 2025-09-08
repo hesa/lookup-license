@@ -40,11 +40,6 @@ def get_parser():
                         type=str,
                         default='text')
 
-    parser.add_argument('-uc', '--update-cache',
-                        action='store_true',
-                        help='if the url is already in the cache, update with a new value. This will automatically disable using the cached values',
-                        default=False)
-
     parser.add_argument('-f', '--file',
                         action='store_true',
                         help='read license from file',
@@ -105,14 +100,24 @@ def get_parser():
                         help=f'don\'t use cache  ({LookupLicenseCache().cache_location()}).',
                         default=False)
 
+    parser.add_argument('-lr', '--list-resources',
+                        action='store_true',
+                        help='output the license resources used and exit.',
+                        default=False)
+
     parser.add_argument('--clear-cache',
                         action='store_true',
-                        help=f'clear the cache ({LookupLicenseCache().cache_location()}).',
+                        help=f'clear the cache ({LookupLicenseCache().cache_location()}) and exit.',
                         default=False)
 
     parser.add_argument('--list-cache',
                         action='store_true',
                         help=f'output the content of the cache ({LookupLicenseCache().cache_location()}) and exit.',
+                        default=False)
+
+    parser.add_argument('-uc', '--update-cache',
+                        action='store_true',
+                        help='if the url is already in the cache, update with a new value. This will automatically disable using the cached values',
                         default=False)
 
     parser.add_argument('input',
@@ -127,6 +132,11 @@ def parse():
 
 def version_info(ll, args):
     return lookup_license.config.lookup_license_version
+
+def list_resources(ll, formatter):
+    resources = ll.list_resources()
+    formatted = formatter.format_resources(resources)
+    print(formatted)
 
 def license_file(ll, license_file):
     result = ll.lookup_license_file(license_file)
@@ -204,6 +214,10 @@ def main():
         cache_list = output_cache(args)
         out, err = formatter.format_cache(cache_list, args.verbose)
         print(out)
+        sys.exit(0)
+
+    if args.list_resources:
+        list_resources(ll, formatter)
         sys.exit(0)
 
     try:

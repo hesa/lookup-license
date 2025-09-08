@@ -24,6 +24,9 @@ class Formatter:
     def format_license(self, lic, verbose=False):
         return None, None
 
+    def format_resources(self, resources, verbose=False):
+        return None
+
     def format_error(self, exception, verbose=False):
         return None, None
 
@@ -40,6 +43,9 @@ class JsonFormatter(Formatter):
 
     def format_error(self, exception, verbose=False):
         return json.dumps(exception), None
+
+    def format_resources(self, resources, verbose=False):
+        return json.dumps(resources, indent=4)
 
     def format_cache(self, entries, verbose=False):
         return json.dumps(entries), None
@@ -94,6 +100,21 @@ class TextFormatter(Formatter):
 
     def format_cache(self, entries, verbose=False):
         return '\n'.join(list(entries)), None
+
+
+    def _format_resource_add(self, title, items, store):
+        sep = '\n * '
+        store.append(f'{title}')
+        items_str = f' * {sep.join(items)}'
+        store.append(items_str)
+        
+    def format_resources(self, resources, verbose=False):
+        ret = []
+        self._format_resource_add('Resources', resources["resources"], ret)
+        self._format_resource_add('Git hosts', resources["git-hosts"], ret)
+        self._format_resource_add('License providers', resources["license-providers"], ret)
+        self._format_resource_add('Package types', resources["package-types"], ret)
+        return '\n'.join(ret)
 
     def format_lookup_urls(self, looked_up_urls, verbose=False):
         if not looked_up_urls:

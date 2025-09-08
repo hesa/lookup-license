@@ -16,7 +16,7 @@ LICENSE_EXPRESSION_PATH = 'licensed.facets.core.discovered.expressions'
 class ClearlyDefined(LicenseProvider):
 
     def name(self):
-        return 'https://clearlydefined.io/'
+        return 'https://clearlydefined.io'
 
     def purl_to_coordinate(self, purl):
         return purl2clearlydefined(purl)
