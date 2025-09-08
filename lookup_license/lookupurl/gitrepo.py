@@ -213,3 +213,6 @@ class GitRepo(LookupURL):
             return None
         if 'github.com' in url:
             return f'{url}/archive/refs/tags/{version}.zip'
+
+    def supported_hosts(self):
+        return ['github', 'gitlab', 'freedesktop']
