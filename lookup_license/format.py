@@ -95,6 +95,14 @@ class TextFormatter(Formatter):
     def format_cache(self, entries, verbose=False):
         return '\n'.join(list(entries)), None
 
+    def format_resources(self, resources, verbose=False):
+        ret = []
+        ret.append(f'Resources:         \n * {"\n * ".join(resources["resources"])}')
+        ret.append(f'Git hosts:         \n * {"\n * ".join(resources["git-hosts"])}')
+        ret.append(f'License providers: \n * {"\n * ".join(resources["license-providers"])}')
+        ret.append(f'Package types:     \n * {"\n * ".join(resources["package-types"])}')
+        return '\n'.join(ret)
+
     def format_lookup_urls(self, looked_up_urls, verbose=False):
         if not looked_up_urls:
             return '', 'No license data found.'
