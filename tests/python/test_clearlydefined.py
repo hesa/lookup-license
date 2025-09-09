@@ -16,6 +16,10 @@ def test_parameters_pypi():
     coord_url = cd.parameters_to_url('pypi/pypi', None, 'boto3', '1.35.99')
     assert 'https://api.clearlydefined.io/definitions/pypi/pypi/-/boto3/1.35.99' == coord_url
 
+def test_parameters_pypi_2():
+    coord_url = cd.parameters_to_url('pypi/pypi', None, 'uritemplate', '4.20.0')
+    assert 'https://api.clearlydefined.io/definitions/pypi/pypi/-/uritemplate/4.20.0' == coord_url
+
 # gem
 def test_parameters_gem():
     coord_url = cd.parameters_to_url('gem/rubygems', None, 'google-apis-core', '0.11.1')
