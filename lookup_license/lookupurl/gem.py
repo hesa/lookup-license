@@ -185,7 +185,7 @@ class Gem(LookupURL):
 
         return identified_gem_data
 
-    def _get_parameters(self, url, version=None):
+    def get_parameters(self, url, version=None):
         if url.startswith('pkg:'):
             purl_dict = PackageURL.from_string(url).to_dict()
             pkg_name = purl_dict['name']
@@ -212,7 +212,7 @@ class Gem(LookupURL):
     def lookup_providers(self, url, version=None):
         logging.debug(f'{self.__class__.__name__}:lookup_providers {url}, {version}')
 
-        parameters = self._get_parameters(url, version)
+        parameters = self.get_parameters(url, version)
         logging.debug(f'{self.__class__.__name__}:lookup_providers parameters: {parameters}')
 
         # Identify licenses at providers
