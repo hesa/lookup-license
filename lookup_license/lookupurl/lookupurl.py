@@ -29,6 +29,10 @@ class LookupURL:
         logging.debug(f'{self.__class__.__name__}:lookup_name()')
         return 'LookupURL'
 
+    def get_parameters(self, url):
+        logging.debug(f'{self.__class__.__name__}:lookup_name()')
+        return None
+
     def lookup_url(self, url):
         logging.debug(f'{self.__class__.__name__}:lookup_url {url}')
 
