@@ -190,6 +190,9 @@ class Gem(LookupURL):
             purl_dict = PackageURL.from_string(url).to_dict()
             pkg_name = purl_dict['name']
             pkg_version = purl_dict['version']
+            pkg_namespace = purl_dict['namespace']
+            if not pkg_namespace:
+                pkg_namespace = "gem"
         elif url.startswith('http'):
             # https  (e.g. https://rubygems.org/gems/google-cloud-env/versions/2.3.0)
             new_url = url.replace('https://rubygems.org/gems/', '')
@@ -199,13 +202,19 @@ class Gem(LookupURL):
                 raise Exception(f'Gem package must have name and version (name@version): {url}')
             pkg_name = splits[0]
             pkg_version = splits[1]
+            pkg_namespace = 'gem'
         else:
             splits = url.split('@')
             pkg_name = splits[0]
-            pkg_version = splits[1]
+            try:
+                pkg_version = splits[1]
+            except:
+                pkg_version = version
+            pkg_namespace = 'gem'
 
         return {
             'name': pkg_name,
+            'namespace': pkg_namespace,
             'version': pkg_version,
         }
 
