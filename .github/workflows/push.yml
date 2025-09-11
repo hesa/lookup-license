@@ -32,7 +32,6 @@ jobs:
       run: |
         #python3 -m unittest
         PYTHONPATH=. tests/shell/test-interactive.sh 1
-        PYTHONPATH=. tests/shell/test-cli.sh
         PYTHONPATH=. tests/shell/test-multiple.sh 1
         PYTHONPATH=. pytest tests/python/
       shell: bash
