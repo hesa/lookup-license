@@ -185,11 +185,14 @@ class Gem(LookupURL):
 
         return identified_gem_data
 
-    def _get_parameters(self, url, version=None):
+    def get_parameters(self, url, version=None):
         if url.startswith('pkg:'):
             purl_dict = PackageURL.from_string(url).to_dict()
             pkg_name = purl_dict['name']
             pkg_version = purl_dict['version']
+            pkg_namespace = purl_dict['namespace']
+            if not pkg_namespace:
+                pkg_namespace = "gem"
         elif url.startswith('http'):
             # https  (e.g. https://rubygems.org/gems/google-cloud-env/versions/2.3.0)
             new_url = url.replace('https://rubygems.org/gems/', '')
@@ -199,20 +202,26 @@ class Gem(LookupURL):
                 raise Exception(f'Gem package must have name and version (name@version): {url}')
             pkg_name = splits[0]
             pkg_version = splits[1]
+            pkg_namespace = 'gem'
         else:
             splits = url.split('@')
             pkg_name = splits[0]
-            pkg_version = splits[1]
+            try:
+                pkg_version = splits[1]
+            except:
+                pkg_version = version
+            pkg_namespace = 'gem'
 
         return {
             'name': pkg_name,
+            'namespace': pkg_namespace,
             'version': pkg_version,
         }
 
     def lookup_providers(self, url, version=None):
         logging.debug(f'{self.__class__.__name__}:lookup_providers {url}, {version}')
 
-        parameters = self._get_parameters(url, version)
+        parameters = self.get_parameters(url, version)
         logging.debug(f'{self.__class__.__name__}:lookup_providers parameters: {parameters}')
 
         # Identify licenses at providers

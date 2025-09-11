@@ -170,6 +170,46 @@ class Swift(LookupURL):
             'repo_suggestions': url_suggestions,
         }
 
+    def lookup_providers(self, url, version=None):
+        logging.debug(f'{self.__class__.__name__}:lookup_providers {url}, {version}')
+
+        parameters = self._get_parameters(url, version)
+        logging.debug(f'{self.__class__.__name__}:lookup_providers parameters: {parameters}')
+
+        # Identify licenses at providers
+        providers = LicenseProviders().lookup_license_package(url, 'gem', None, parameters['name'], parameters['version'])
+        logging.debug(f'{self.__class__.__name__}:lookup_providers_impl providers: {providers}')
+
+        return providers
+
+    def get_parameters(self, url, version):
+        if 'https://pypi.org/' in url:
+            return None
+        elif url.startswith('pkg:'):
+            purl_dict = PackageURL.from_string(url).to_dict()
+            pkg_name = purl_dict['name']
+            pkg_version = purl_dict['version']
+            pkg_namespace = purl_dict['namespace']
+            print("PJK... " + str(purl_dict))
+        else:
+            # Create parameters from swift package name
+            stripped_url = re.sub(r'^[/]*swift/', '', url)
+            splits = stripped_url.split('@')
+            pkg_name = splits[0]
+            pkg_namespace = 'swift'
+            try:
+                pkg_version = splits[1]
+            except Exception:
+                pkg_version = version
+            
+        return {
+            'name': pkg_name,
+            'namespace': pkg_namespace,
+            'version': pkg_version,
+        }
+        
+    
+    
     def lookup_package(self, url):
         # Try identifying the purl in swiftpackageindex.com
         swiftpackageindex_data = self._try_swiftpackageindex(url)
@@ -195,6 +235,7 @@ class Swift(LookupURL):
             success = repo_data['url_data']['success']
             if success:
                 break
+
             else:
                 repo_data = None
 
