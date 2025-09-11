@@ -127,8 +127,11 @@ class Pypi(LookupURL):
             stripped_url = re.sub(r'^http[s]*://pypi.org/project/', '', stripped_url)
             splits = stripped_url.split('/')
             pkg_name = splits[0]
-            pkg_version = splits[1]
-            pkg_namespace = None
+            try:
+                pkg_version = splits[1]
+            except:
+                pkg_version = version                
+            pkg_namespace = 'pypi'
         elif 'https://pypi.org/pypi/' in url:
             stripped_url = url.strip('/')
             stripped_url = re.sub(r'/json[/]*$', '', stripped_url)
