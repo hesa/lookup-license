@@ -9,6 +9,7 @@ from packageurl.contrib import purl2url  # noqa: I900
 
 from lookup_license.lookupurl.gem import Gem
 from lookup_license.lookupurl.pypi import Pypi
+from lookup_license.lookupurl.go import Go
 from lookup_license.lookupurl.swift import Swift
 from lookup_license.lookupurl.gitrepo import GitRepo
 from lookup_license.lookupurl.maven import Maven
@@ -22,6 +23,7 @@ class Ecosystem(Enum):
     SWIFT = 'swift'
     GEM = 'gem'
     MAVEN = 'maven'
+    GO = 'go'
 
 
 class Purl(LookupURL):
@@ -40,8 +42,12 @@ class Purl(LookupURL):
             'github': GitRepo,
             'gem': Gem,
             'maven': Maven,
+            'go': Go,
         }
-        return _purl_handlers[purl_object.type]()
+        try:
+            return _purl_handlers[purl_object.type]()
+        except Exception:
+            raise Exception(f'Cannot find a handler for {url}')
 
     def _github_repo_url(self, purl):
         """
