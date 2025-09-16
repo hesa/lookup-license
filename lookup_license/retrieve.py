@@ -54,3 +54,7 @@ class Retriever():
         }
 
         return res
+
+    def download_url_raw(self, url):
+        logging.info(f'download: {url}')
+        return requests.get(url, stream=True, timeout=5)
