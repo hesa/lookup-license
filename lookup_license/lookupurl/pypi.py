@@ -218,7 +218,7 @@ class Pypi(LookupURL):
     def lookup_providers(self, url, version=None):
         logging.debug(f'{self.__class__.__name__}:lookup_providers {url}, {version}')
 
-        parameters = self._get_parameters(url, version)
+        parameters = self.get_parameters(url, version)
         logging.debug(f'{self.__class__.__name__}:lookup_providers parameters: {parameters}')
 
         # Identify licenses at providers
