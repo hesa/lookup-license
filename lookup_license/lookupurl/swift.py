@@ -117,6 +117,8 @@ class Swift(LookupURL):
 
         package_details = {
             'package_url': packages_url,
+            'package_license_texts': None,
+            'package_type': self.name(),
             'homepage': '',
             'name': '',
             'version': '',
