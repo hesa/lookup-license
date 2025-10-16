@@ -57,6 +57,8 @@ class LookupURLFactory:
             url_type = Ecosystem.SWIFT
         elif contains(url, ['maven']):
             url_type = Ecosystem.MAVEN
+        elif contains(url, ['go']):
+            url_type = Ecosystem.GO
 
         if not url_type:
             raise Exception(f'Purl "{url}" not supported.')
