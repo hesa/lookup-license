@@ -93,6 +93,7 @@ class Pypi(LookupURL):
         package_details = {
             'package_url': pypi_url,
             'package_type': self.name(),
+            'package_license_texts': None,
             'homepage': homepage,
             'name': name,
             'version': version,
