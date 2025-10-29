@@ -28,8 +28,6 @@ class Go(LookupURL):
         repo = False
         repo_url = None
         for encoded_line in lines:
-            #print(encoded_line)
-            #encoded_line = line.decode(encoding="utf-8")
             if '>Repository<' in encoded_line:
                 repo = True
             if repo:
@@ -44,27 +42,16 @@ class Go(LookupURL):
         license_texts = []
         license_text = []
         inside_license_text = False
-        print()
-        print()
         for line in homepage_lines:
-            #print("line: ---")
-            #print("line. " + str(type(line)) + " :: " + str(type(homepage_lines) ))
-            #print("line: " + str(line))
-            #encoded_line = line.decode(encoding="utf-8")
             encoded_line = line
             if inside_license_text:
                 if '</pre>' in encoded_line:
-                    print("add license text 1")
                     inside_license_text = False
                     license_texts.append('\n'.join(license_text))
                     license_text = []
                 else:
-                    #print("add license text 2")
                     license_text.append(encoded_line)
-                    #if encoded_line.startswith("#"):
-                    #    print(encoded_line)
             elif '<pre class="License-contents">' in encoded_line:
-                print("license line: " + encoded_line)
                 inside_license_text = True
                 license_text.append(encoded_line.replace('<pre class="License-contents">', ''))
         return license_texts
@@ -83,14 +70,9 @@ class Go(LookupURL):
     def get_parameters_pkg_go_dev(self, url, version):
         logging.debug(f'{self.__class__.__name__}:get_parameters_pkg_go_dev {url}, {version}')
         stripped_url = url.replace('https://pkg.go.dev/', '')
-        print("stripped: " + str(stripped_url))
         splits = stripped_url.split('/')
-        print("splits: " + str(splits))
         repo_host = splits[0]
         repo_org = splits[1]
-        print("1 splits: " + str(splits))
-        print("2 splits: " + str(splits[0]))
-        print("3 splits: " + str(splits[1]))
         name_splits = splits[1].split('@')
         pkg_name = name_splits[0]
         if len(name_splits) > 1:
@@ -99,14 +81,11 @@ class Go(LookupURL):
             pkg_version = None
         if len(splits) > 4:
             sub_dirs = '/'.join(splits[3:])
-        
         ret = {
             'name': pkg_name,
             'namespace': f'go/golang/{repo_host}/{repo_org}',
             'version': pkg_version,
         }
-        print("HESA parameters: " + str(ret))
-        print('https://api.clearlydefined.io/definitions/go/golang/github.com/typelate/check/v0.0.3')
         return ret
             
         
@@ -115,13 +94,10 @@ class Go(LookupURL):
 
         if "/" not in url:
             logging.debug('A go package must have a "/" to identify it correctly')
-            print('A go package must have a "/" to identify it correctly')
             return None
         
         stripped_url = url.replace('https://pkg.go.dev/', '')
-        print("stripped: " + str(stripped_url))
         splits = stripped_url.split('/')
-        print("splits: " + str(splits))
         repo_host = splits[0]
         repo_org = splits[1]
         name_splits = splits[1].split('@')
@@ -138,8 +114,6 @@ class Go(LookupURL):
             'namespace': f'go/golang/{repo_host}/{repo_org}',
             'version': pkg_version,
         }
-        print("HESA parameters: " + str(ret))
-        print('https://api.clearlydefined.io/definitions/go/golang/github.com/typelate/check/v0.0.3')
         return ret
             
         
@@ -148,20 +122,16 @@ class Go(LookupURL):
         if url.startswith('https://pkg.go.dev'):
             return self.get_parameters_pkg_go_dev(url, version)
         else:
-            print("implement plain package")
             return self.get_parameters_pkg_only(url, version)
             assert False
         return {'name': 'go'}
 
     def lookup_package(self, url):
-        print("HESA IN lookup_package")
-        print("lookup_url:lookup_url go lookup_package")
         logging.debug(f'{self.__class__.__name__}:lookup_package {url}')
 
         url = url.strip('/')
 
         if url.startswith('pkg:'):
-            print("HERE 1")
             # purl
             purl_object = PackageURL.from_string(url)
             go_urls = []
@@ -170,7 +140,6 @@ class Go(LookupURL):
             else:
                 go_urls.append(f'https://pkg.go.dev//{purl_object.name}/json')
         elif url.startswith('http'):
-            print("HERE 2")
             # https
             go_urls = [
                 url,
@@ -178,12 +147,9 @@ class Go(LookupURL):
                 f'{url}/json'.replace('/project/', '/go/'),
             ]
         else:
-            print("HERE 3: " + str(url))
             go_urls = [
                 f'https://pkg.go.dev/{url}',
             ]
-
-            print("HERE 3: " + str(go_urls))
 
         #
         # Loop through go urls, if data found in one url
@@ -196,8 +162,6 @@ class Go(LookupURL):
                 # use the data below
                 identified_go_data = go_data
                 break
-        print("go pd: " + str(identified_go_data))
-        print("HESA RETURN FROM lookup_package " + str(identified_go_data)[:20])
         return identified_go_data
 
     def homepage_lines(self, retriever, go_url):
@@ -210,26 +174,18 @@ class Go(LookupURL):
         return lines
                     
     def _try_go_package_page(self, go_url):
-        print("try: " + str(go_url))
         
         if go_url.count('/') == 6:
             splits = go_url.split('/')
 
         retriever = Retriever()
-        print("go_url: " + str(go_url))
-        print("go_url: " + str(f'{go_url}?tab=licenses'))
         repo_url_content_lines = self.homepage_lines(retriever, go_url)
         repo_url_license_lines = self.homepage_lines(retriever, f'{go_url}?tab=licenses')
 
         repo_url = self.homepage_repo_url(repo_url_content_lines)
-        print("repo_url:     " + str(repo_url))
         
         license_files = self.homepage_license_files(repo_url_license_lines)
-        print("license-files: " + str(license_files))
         license_texts = self.homepage_license_texts(repo_url_license_lines)
-
-        print("license_files: " + str(license_files))
-        print("license_texts: " + str(len(license_texts)))
 
         repo_suggestions = [{
                     'repository': repo_url,
@@ -248,7 +204,6 @@ class Go(LookupURL):
             'repository': repo_url,
         }
 
-        print("go pd: " + str(license_texts))
         return {
             'licenses': [],
             'repo_suggestions': repo_suggestions,
@@ -276,7 +231,6 @@ class Go(LookupURL):
 
     def lookup_url_impl(self, url, package_data=None, providers_data=None):
         logging.debug(f'{self.__class__.__name__}:lookup_url_impl {url}, {package_data is not None}, {providers_data is not None}')
-        print(f'{self.__class__.__name__}:lookup_url_impl {url}, {package_data is not None}, {providers_data is not None}')
         repo_data = None
 
         if not package_data:
@@ -289,11 +243,9 @@ class Go(LookupURL):
         uniq_repos = set([repo['repository'] for repo in package_data['repo_suggestions']]) # noqa: C403
         repo_data = None
         for repo in uniq_repos:
-            print("Look up repo: " + str(repo))
             if not repo:
                 continue
             repo_data = self.gitrepo.lookup_url(repo)
-            print("Look up repo: " + repo + ": " + str(repo_data))
             success = repo_data['url_data']['success']
             if success:
                 break
@@ -309,7 +261,7 @@ class Go(LookupURL):
         logging.debug(f'{self.__class__.__name__}:lookup_providers parameters: {parameters}')
 
         # Identify licenses at providers
-        providers = LicenseProviders().lookup_license_package(url, 'pypi/pypi', None, parameters['name'], parameters['version'])
+        providers = LicenseProviders().lookup_license_package(url, 'go', None, parameters['name'], parameters['version'])
         logging.debug(f'{self.__class__.__name__}:lookup_providers_impl providers: {providers}')
 
         return providers
