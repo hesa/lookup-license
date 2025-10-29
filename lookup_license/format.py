@@ -162,7 +162,7 @@ class TextFormatter(Formatter):
             self._add_key('Type:', package_details, 'package_type', ret)
             self._add_key('Url:', package_details, 'package_url', ret)
             self._add_key('Homepage:', package_details, 'homepage', ret)
-            #            self._add_key('Repository:', package_details, 'repository', ret)  # noqa: E800
+            self._add_key('License:', package_details, 'package_license_text', ret)
 
             licenses = ' AND '.join([lic['license'] for lic in package_data['licenses']])
             self._add_value('License:', licenses, ret)
