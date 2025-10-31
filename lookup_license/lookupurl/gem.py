@@ -93,6 +93,8 @@ class Gem(LookupURL):
 
         package_details = {
             'package_url': gem_url,
+            'package_license_texts': None,
+            'package_type': self.name(),
             'homepage': json_data.get('homepage_uri', ''),
             'name': json_data.get('name', ''),
             'version': json_data.get('version', ''),
@@ -208,8 +210,9 @@ class Gem(LookupURL):
             pkg_name = splits[0]
             try:
                 pkg_version = splits[1]
-            except:
+            except Exception as e:
                 pkg_version = version
+                logging.debug(f'Could not get the package version from the URL ({url}), using version ({version}) instead. Exception: {e}')
             pkg_namespace = 'gem'
 
         return {

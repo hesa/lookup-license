@@ -138,6 +138,7 @@ class Maven(LookupURL):
         package_details = {
             'package_url': pom_url,
             'package_type': self.name(),
+            'package_license_text': None,
             'homepage': 'homepage',
             'name': dict_project.get('name', ''),
             'version': dict_project.get('version', ''),

@@ -9,6 +9,7 @@ import pytest
 
 from lookup_license.lookupurl.pypi import Pypi
 from lookup_license.lookupurl.gem import Gem
+from lookup_license.lookupurl.go import Go
 from lookup_license.lookupurl.swift import Swift
 from lookup_license.lookupurl.clearlydefined import ClearlyDefined
 
@@ -114,5 +115,34 @@ def test_get_parameters_swift_purl():
     assert 'rubygems/github.com/google' == params.get('namespace')
     assert 'abseil-cpp-binary' == params.get('name')
     assert '1.2024011602.0' == params.get('version')
+
+
+#
+# Go
+#
+def test_get_parameters_go_package():
+    # from go package to parameters
+    s = Go()
+    params = s.get_parameters('https://pkg.go.dev/github.com/typelate/check@v0.0.3', None)
+    assert 'go/golang/github.com/typelate' == params.get('namespace')
+    assert 'typelate' == params.get('name')
+#    assert 'v0.0.3' == params.get('version')
+
+def test_get_parameters_go_package_no_version():
+    # from go package to parameters
+    s = Go()
+    params = s.get_parameters('abseil-cpp-binary', '1.2024011602.0')
+#    assert 'go/golang/github.com/' == params.get('namespace')
+#    assert 'abseil-cpp-binary' == params.get('name')
+#    assert '1.2024011602.0' == params.get('version')
+
+def test_get_parameters_go_purl():
+    # from purl package to parameters
+    s = Go()
+    params = s.get_parameters('pkg:golang/github.com/google/abseil-cpp-binary@1.2024011602.0', None)
+   
+    assert 'go/golang/pkg:golang/github.com' == params.get('namespace')
+#    assert 'abseil-cpp-binary' == params.get('name')
+#    assert '1.2024011602.0' == params.get('version')
 
 

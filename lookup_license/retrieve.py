@@ -44,7 +44,7 @@ class Retriever():
         content = response.content
         code = response.status_code
         decoded_content = content.decode('utf-8')
-        success = (code != 404)
+        success = (not f'{code}'.startswith('40'))
         res = {
             'decoded_content': decoded_content,
             'provided': url,
@@ -54,3 +54,7 @@ class Retriever():
         }
 
         return res
+
+    def download_url_raw(self, url):
+        logging.info(f'download: {url}')
+        return requests.get(url, stream=True, timeout=5)

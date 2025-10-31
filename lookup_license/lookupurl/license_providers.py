@@ -19,6 +19,8 @@ class LicenseProviders:
             'pypi/pypi': '-',
             'gem': 'rubygems',
             'gem/rubygems': '',
+            'golang': 'go',
+            'go': 'go',
         }
 
     def providers(self):

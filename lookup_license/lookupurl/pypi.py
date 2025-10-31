@@ -93,6 +93,7 @@ class Pypi(LookupURL):
         package_details = {
             'package_url': pypi_url,
             'package_type': self.name(),
+            'package_license_texts': None,
             'homepage': homepage,
             'name': name,
             'version': version,
@@ -129,8 +130,9 @@ class Pypi(LookupURL):
             pkg_name = splits[0]
             try:
                 pkg_version = splits[1]
-            except:
-                pkg_version = version                
+            except Exception as e:
+                logging.debug(f'Failed getting version from {url}. Exception: {e}')
+                pkg_version = version
             pkg_namespace = 'pypi'
         elif 'https://pypi.org/pypi/' in url:
             stripped_url = url.strip('/')
@@ -218,7 +220,7 @@ class Pypi(LookupURL):
     def lookup_providers(self, url, version=None):
         logging.debug(f'{self.__class__.__name__}:lookup_providers {url}, {version}')
 
-        parameters = self._get_parameters(url, version)
+        parameters = self.get_parameters(url, version)
         logging.debug(f'{self.__class__.__name__}:lookup_providers parameters: {parameters}')
 
         # Identify licenses at providers

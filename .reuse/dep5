@@ -27,3 +27,6 @@ Files: lookup_license/data/url-fixes.json
 Copyright: 2025 Henrik Sandklef <hesa@sandklef.com>
 License: CC-BY-4.0
 
+Files: tests/input/yaml@v1.4.0 yaml@v1.4.0?tab=licenses
+Copyright: 2025 The Go Project
+License: CC-BY-4.0

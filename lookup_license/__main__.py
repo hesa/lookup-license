@@ -75,6 +75,11 @@ def get_parser():
                         help='try to read license from rubygems.org package (no scanning)',
                         default=False)
 
+    parser.add_argument('--go',
+                        action='store_true',
+                        help='try to read license from pkg.go.dev package (no scanning)',
+                        default=False)
+
     parser.add_argument('--maven',
                         action='store_true',
                         help='try to read license from maven (no scanning)',
@@ -165,6 +170,10 @@ def pypi_url(ll, url):
 
 def gem_url(ll, url):
     result = LookupURLFactory.lookupurl('gem').lookup_url(url)
+    return result
+
+def go_url(ll, url):
+    result = LookupURLFactory.lookupurl('go').lookup_url(url)
     return result
 
 def maven_url(ll, url):
@@ -266,6 +275,9 @@ def main():
                     out, err = formatter.format_lookup_urls(result, args.verbose)
                 elif args.gem:
                     result = gem_url(ll, args.input[0])
+                    out, err = formatter.format_lookup_urls(result, args.verbose)
+                elif args.go:
+                    result = go_url(ll, args.input[0])
                     out, err = formatter.format_lookup_urls(result, args.verbose)
                 elif args.maven:
                     result = maven_url(ll, args.input[0])

@@ -20,6 +20,8 @@ class Url(LookupURL):
             'original_url': url,
         }
 
-        ret = self.lookup_license_urls(url, [[urls]])
-
+        try:
+            ret = self.lookup_license_urls(url, [[urls]])
+        except Exception as e:
+            logging.debug(f'Failed lookup url {url}. Exception: {e}')
         return ret

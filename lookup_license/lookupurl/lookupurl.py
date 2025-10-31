@@ -47,9 +47,24 @@ class LookupURL:
         package_data = self.lookup_package(url)
         if package_data:
             try:
-                version = package_data.get('package_details').get('version')
-            except Exception:
+                package_details = package_data.get('package_details')
+                version = package_details.get('version')
+                if 'package_license_texts' in package_details:
+                    package_license_texts = package_details['package_license_texts']
+                else:
+                    logging.debug(f'Failed getting package_license_texts from data as received from {url}.')
+
+                license_list = []
+                if package_license_texts:
+                    for license_text in package_license_texts:
+                        lookedup_licenses = self.lookup_license.lookup_license_text(license_text)
+                        license_list += [x['license'] for x in lookedup_licenses['normalized']]
+                del package_details['package_license_texts']
+                package_details['package_license_text'] = ', '.join(license_list)
+            except Exception as e:
+                logging.debug(f'Failed getting version from data as received from {url}. Exception: {e}')
                 version = None
+
         else:
             version = None
 
@@ -128,6 +143,8 @@ class LookupURL:
                 licenses_from_url = []
                 if status:
                     for _lic in lic['normalized']:
+                        print("_lic: " + str(_lic))
+                        print("_lic: " + str(status))
                         licenses_from_url.append(_lic["license"])
                     licenses_from_url_str = ' AND '.join(licenses_from_url)
                     if licenses_from_url:
