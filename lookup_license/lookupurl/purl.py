@@ -47,7 +47,7 @@ class Purl(LookupURL):
         try:
             return _purl_handlers[purl_object.type]()
         except Exception:
-            raise Exception(f'Cannot find a handler for {url}')
+            raise Exception(f'Cannot find a handler for {purl}')
 
     def _github_repo_url(self, purl):
         """

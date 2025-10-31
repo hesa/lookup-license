@@ -8,6 +8,7 @@ LL_TMP_DIR=/tmp/ll-tmp
 ACTUAL_OUTPUT=${LL_TMP_DIR}/actual-output.txt
 EXPECTED_OUTPUT=${LL_TMP_DIR}/expected-output.txt
 LOOKUP_TMP_FILE=${LL_TMP_DIR}//lookups.tmp
+
 mkdir -p ${LL_TMP_DIR}
 rm -f ${EXPECTED_OUTPUT} ${LOOKUP_TMP_FILE} ${ACTUAL_OUTPUT}
 

@@ -101,13 +101,12 @@ class TextFormatter(Formatter):
     def format_cache(self, entries, verbose=False):
         return '\n'.join(list(entries)), None
 
-
     def _format_resource_add(self, title, items, store):
         sep = '\n * '
         store.append(f'{title}')
         items_str = f' * {sep.join(items)}'
         store.append(items_str)
-        
+
     def format_resources(self, resources, verbose=False):
         ret = []
         self._format_resource_add('Resources', resources["resources"], ret)

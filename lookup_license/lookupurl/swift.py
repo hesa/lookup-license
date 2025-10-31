@@ -5,6 +5,7 @@
 from lookup_license.lookupurl.lookupurl import LookupURL
 from lookup_license.lookupurl.gitrepo import GitRepo
 from lookup_license.cache import LookupLicenseCache
+from lookup_license.lookupurl.license_providers import LicenseProviders
 
 from packageurl import PackageURL  # noqa: I900
 from lookup_license.retrieve import Retriever
@@ -175,7 +176,7 @@ class Swift(LookupURL):
     def lookup_providers(self, url, version=None):
         logging.debug(f'{self.__class__.__name__}:lookup_providers {url}, {version}')
 
-        parameters = self._get_parameters(url, version)
+        parameters = self.get_parameters(url, version)
         logging.debug(f'{self.__class__.__name__}:lookup_providers parameters: {parameters}')
 
         # Identify licenses at providers
@@ -203,15 +204,13 @@ class Swift(LookupURL):
                 pkg_version = splits[1]
             except Exception:
                 pkg_version = version
-            
+
         return {
             'name': pkg_name,
             'namespace': pkg_namespace,
             'version': pkg_version,
         }
-        
-    
-    
+
     def lookup_package(self, url):
         # Try identifying the purl in swiftpackageindex.com
         swiftpackageindex_data = self._try_swiftpackageindex(url)

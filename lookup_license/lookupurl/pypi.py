@@ -130,8 +130,9 @@ class Pypi(LookupURL):
             pkg_name = splits[0]
             try:
                 pkg_version = splits[1]
-            except:
-                pkg_version = version                
+            except Exception as e:
+                logging.debug(f'Failed getting version from {url}. Exception: {e}')
+                pkg_version = version
             pkg_namespace = 'pypi'
         elif 'https://pypi.org/pypi/' in url:
             stripped_url = url.strip('/')
