@@ -5,17 +5,13 @@
 from lookup_license.lookupurl.lookupurl import LookupURL
 from lookup_license.lookupurl.gitrepo import GitRepo
 from lookup_license.lookupurl.license_providers import LicenseProviders
-from lookup_license.utils import get_keypath
 
 from lookup_license.retrieve import Retriever
 
-from packageurl import PackageURL
+from packageurl import PackageURL # noqa: I900
 
 import html
-import json
 import logging
-
-
 
 class Go(LookupURL):
 
@@ -33,11 +29,11 @@ class Go(LookupURL):
             if repo:
                 if '<a href' in encoded_line:
                     href = encoded_line.split()[1]
-                    url = href.split('=')[1].replace('"','')
+                    url = href.split('=')[1].replace('"', '')
                     repo = False
                     repo_url = url
         return repo_url
-        
+
     def homepage_license_texts(self, homepage_lines):
         license_texts = []
         license_text = []
@@ -59,7 +55,6 @@ class Go(LookupURL):
     def homepage_license_files(self, lines):
         license_files = []
         for encoded_line in lines:
-#            encoded_line = line.decode(encoding="utf-8")
             if '>Source: ' in encoded_line:
                 lic_1 = encoded_line.split('>')[1]
                 lic_2 = lic_1.split('<')[0]
@@ -79,23 +74,20 @@ class Go(LookupURL):
             pkg_version = name_splits[1]
         else:
             pkg_version = None
-        if len(splits) > 4:
-            sub_dirs = '/'.join(splits[3:])
         ret = {
             'name': pkg_name,
             'namespace': f'go/golang/{repo_host}/{repo_org}',
             'version': pkg_version,
         }
         return ret
-            
-        
+
     def get_parameters_pkg_only(self, url, version):
         logging.debug(f'{self.__class__.__name__}:get_parameters_pkg_only {url}, {version}')
 
         if "/" not in url:
             logging.debug('A go package must have a "/" to identify it correctly')
             return None
-        
+
         stripped_url = url.replace('https://pkg.go.dev/', '')
         splits = stripped_url.split('/')
         repo_host = splits[0]
@@ -106,24 +98,20 @@ class Go(LookupURL):
             pkg_version = name_splits[1]
         else:
             pkg_version = None
-        if len(splits) > 4:
-            sub_dirs = '/'.join(splits[3:])
-        
+
         ret = {
             'name': pkg_name,
             'namespace': f'go/golang/{repo_host}/{repo_org}',
             'version': pkg_version,
         }
         return ret
-            
-        
+
     def get_parameters(self, url, version):
         logging.debug(f'{self.__class__.__name__}:get_parameters {url}, {version}')
         if url.startswith('https://pkg.go.dev'):
             return self.get_parameters_pkg_go_dev(url, version)
         else:
             return self.get_parameters_pkg_only(url, version)
-            assert False
         return {'name': 'go'}
 
     def lookup_package(self, url):
@@ -172,27 +160,25 @@ class Go(LookupURL):
             plain_line = html.unescape(encoded_line)
             lines.append(plain_line)
         return lines
-                    
+
     def _try_go_package_page(self, go_url):
-        
-        if go_url.count('/') == 6:
-            splits = go_url.split('/')
 
         retriever = Retriever()
         repo_url_content_lines = self.homepage_lines(retriever, go_url)
         repo_url_license_lines = self.homepage_lines(retriever, f'{go_url}?tab=licenses')
 
         repo_url = self.homepage_repo_url(repo_url_content_lines)
-        
-        license_files = self.homepage_license_files(repo_url_license_lines)
+
         license_texts = self.homepage_license_texts(repo_url_license_lines)
 
-        repo_suggestions = [{
-                    'repository': repo_url,
-                    'config_url': go_url,
-                    'config_path': '',
-                }]
+        # TODO: should we pass on the license files? # noqa: T101
+        # license_files = self.homepage_license_files(repo_url_license_lines) # noqa: F128
 
+        repo_suggestions = [{
+            'repository': repo_url,
+            'config_url': go_url,
+            'config_path': '',
+        }]
 
         package_details = {
             'package_url': go_url,
@@ -235,7 +221,7 @@ class Go(LookupURL):
 
         if not package_data:
             return None
-        
+
         #
         # The data above contains suggestions for repository
         # urls. Loop through these and analyse them if data is found,
@@ -265,4 +251,3 @@ class Go(LookupURL):
         logging.debug(f'{self.__class__.__name__}:lookup_providers_impl providers: {providers}')
 
         return providers
-
