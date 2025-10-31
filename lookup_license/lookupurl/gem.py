@@ -210,8 +210,9 @@ class Gem(LookupURL):
             pkg_name = splits[0]
             try:
                 pkg_version = splits[1]
-            except:
+            except Exception as e:
                 pkg_version = version
+                logging.debug(f'Could not get the package version from the URL ({url}), using version ({version}) instead. Exception: {e}')
             pkg_namespace = 'gem'
 
         return {
