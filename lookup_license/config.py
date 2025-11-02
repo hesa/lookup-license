@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Henrik Sandklef
+# SPDX-FileCopyrightText: 2025 Henrik Sandklef
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -11,11 +11,12 @@ http_timeout = 10 # seconds
 
 module_name = 'lookup_license'
 
-DESCRIPTION = """NAME
-  lookup-license
+short_description = 'Python tool to identify license from license text, urls, license names and package names.'
+
+DESCRIPTION = """lookup-license
 
 DESCRIPTION
-  Python tool to identify license from license text or license names.
+  Python tool to identify license from license text, urls, license names and package names.
 """
 
 EPILOG = """
@@ -29,7 +30,7 @@ REPORTING BUGS
   File a ticket at https://github.com/hesa/lookup-license/issues
 
 COPYRIGHT
-  Copyright (c) 2024 Henrik Sandklef<hesa@sandklef.com>.
+  Copyright (c) 2025 Henrik Sandklef<hesa@sandklef.com>.
   License GPL-3.0-or-later
 
 ATTRIBUTION
