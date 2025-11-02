@@ -4,7 +4,7 @@
 
 import setuptools
 from lookup_license.config import lookup_license_version
-from lookup_license.config import DESCRIPTION
+from lookup_license.config import short_description
 
 with open("README.md") as f:
     _long_description = f.read()
@@ -23,7 +23,9 @@ setuptools.setup(
     version=lookup_license_version,
     author="Henrik Sanklef",
     author_email="hesa@sandklef.com",
-    description=DESCRIPTION,
+    homepage="https://github.com/hesa/lookup-license",
+    repository="https://github.com/hesa/lookup-license",
+    description=short_description,
     long_description=_long_description,
     long_description_content_type="text/markdown",
     license_files=('LICENSES/GPL-3.0-or-later.txt',),
