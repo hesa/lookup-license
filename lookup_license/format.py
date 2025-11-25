@@ -1,16 +1,20 @@
-import json
-
 # SPDX-FileCopyrightText: 2024 Henrik Sandklef
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+import json
+import yaml
+
 FORMAT_JSON = "json"
+FORMAT_YAML = "yaml"
 FORMAT_TEXT = "text"
 
 class FormatterFactory():
 
     @staticmethod
     def formatter(fmt):
+        if fmt.lower() == FORMAT_YAML:
+            return YamlFormatter()
         if fmt.lower() == FORMAT_JSON:
             return JsonFormatter()
         if fmt.lower() == FORMAT_TEXT:
@@ -52,6 +56,23 @@ class JsonFormatter(Formatter):
 
     def format_lookup_urls(self, looked_up_urls, verbose=False):
         return json.dumps(looked_up_urls, indent=4), None
+
+class YamlFormatter(Formatter):
+
+    def format_license(self, lic, verbose=False):
+        return yaml.safe_dump(lic), None
+
+    def format_error(self, exception, verbose=False):
+        return yaml.safe_dump(exception), None
+
+    def format_resources(self, resources, verbose=False):
+        return yaml.safe_dump(resources, indent=4)
+
+    def format_cache(self, entries, verbose=False):
+        return yaml.safe_dump(entries), None
+
+    def format_lookup_urls(self, looked_up_urls, verbose=False):
+        return yaml.safe_dump(looked_up_urls, indent=4), None
 
 class TextFormatter(Formatter):
 
