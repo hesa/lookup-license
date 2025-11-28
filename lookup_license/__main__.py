@@ -38,7 +38,8 @@ def get_parser():
 
     parser.add_argument('-of', '--output-format',
                         type=str,
-                        default='text')
+                        help=f'Format for output. Available format: {", ".join([f'"{x}"' for x in FormatterFactory.formats()])}. Default "{FormatterFactory.default_format()}"',
+                        default=FormatterFactory.default_format())
 
     parser.add_argument('-f', '--file',
                         action='store_true',
