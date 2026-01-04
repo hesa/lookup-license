@@ -8,6 +8,8 @@ import yaml
 FORMAT_JSON = "json"
 FORMAT_YAML = "yaml"
 FORMAT_TEXT = "text"
+DEFAULT_FORMAT = FORMAT_TEXT
+FORMATS = [FORMAT_JSON, FORMAT_YAML, FORMAT_TEXT]
 
 class FormatterFactory():
 
@@ -19,6 +21,14 @@ class FormatterFactory():
             return JsonFormatter()
         if fmt.lower() == FORMAT_TEXT:
             return TextFormatter()
+
+    @staticmethod
+    def formats():
+        return FORMATS
+
+    @staticmethod
+    def default_format():
+        return DEFAULT_FORMAT
 
 class Formatter:
 
