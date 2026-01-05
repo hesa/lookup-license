@@ -20,6 +20,10 @@ import lookup_license.config
 
 def get_parser():
 
+    default_output_format = FormatterFactory.default_format()
+    
+    output_formats = ', '.join([f'"{x}"' for x in FormatterFactory.formats()])
+
     parser = argparse.ArgumentParser(
         description=lookup_license.config.DESCRIPTION,
         epilog=lookup_license.config.EPILOG,
@@ -38,7 +42,8 @@ def get_parser():
 
     parser.add_argument('-of', '--output-format',
                         type=str,
-                        default='text')
+                        help=f'Format for output. Available format: {output_formats}. Default "{default_output_format}"',
+                        default=default_output_format)
 
     parser.add_argument('-f', '--file',
                         action='store_true',
