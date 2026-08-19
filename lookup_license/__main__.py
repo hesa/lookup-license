@@ -90,6 +90,11 @@ def get_parser():
                         help='try to read license from maven (no scanning)',
                         default=False)
 
+    parser.add_argument('--license-list',
+                        action='store_true',
+                        help='identify and simplify a list of licenses',
+                        default=False)
+
     parser.add_argument('-s', '--shell',
                         action='store_true',
                         help='interactive shell',
@@ -183,6 +188,10 @@ def go_url(ll, url):
 
 def maven_url(ll, url):
     result = LookupURLFactory.lookupurl('maven').lookup_url(url)
+    return result
+
+def license_list(ll, licenses):
+    result = ll.lookup_license_list(licenses)
     return result
 
 def license_text(ll, texts, minimum_score):
@@ -287,6 +296,10 @@ def main():
                 elif args.maven:
                     result = maven_url(ll, args.input[0])
                     out, err = formatter.format_lookup_urls(result, args.verbose)
+                elif args.license_list:
+                    out = license_list(ll, args.input)
+                    err = None
+                    result = None
                 else:
                     result = license_text(ll, args.input, float(args.minimum_score))
                     out, err = formatter.format_license(result, args.verbose)

@@ -143,8 +143,6 @@ class LookupURL:
                 licenses_from_url = []
                 if status:
                     for _lic in lic['normalized']:
-                        print("_lic: " + str(_lic))
-                        print("_lic: " + str(status))
                         licenses_from_url.append(_lic["license"])
                     licenses_from_url_str = ' AND '.join(licenses_from_url)
                     if licenses_from_url:
