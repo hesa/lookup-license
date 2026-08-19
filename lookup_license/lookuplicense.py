@@ -120,7 +120,17 @@ class LookupLicense():
             new = url.replace('/src/', '/raw/')
             return new
 
-#    @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
+    def lookup_license_list(self, licenses, minimum_score=lookup_license.config.default_minimum_score):
+        looked_ups = set()
+        for lic in licenses:
+            if lic:
+                looked_up = self.lookup_license_text(lic)
+                #identification = looked_up['indentification']
+                for looked_up_lic in looked_up['normalized']:
+                    looked_ups.add(looked_up_lic)
+        return ' AND '.join(list(looked_ups))
+
+    #    @cached(cache=LicenseCache(maxsize=MAX_CACHE_SIZE), info=True)
     def lookup_license_text(self, license_text, minimum_score=lookup_license.config.default_minimum_score):
         # if short license text, it is probably a license name
         # try normalizing with foss-flame
