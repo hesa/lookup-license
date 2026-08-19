@@ -47,14 +47,16 @@ class Pypi(LookupURL):
         #
         # Handle license variable (in pypi JSON data)
         #
-        license_var = json_data['info'].get('license', None)
-        if license_var:
-            license_object = {
-                'url': pypi_url,
-                'section': 'info.license',
-                'license': license_var,
-            }
-            licenses_from_package.append(license_object)
+        json_data_info = json_data['info']
+        for license_key in ['license', 'license_expression']:
+            license_var = json_data_info.get(license_key, None)
+            if license_var:
+                license_object = {
+                    'url': pypi_url,
+                    'section': license_key,
+                    'license': license_var,
+                }
+                licenses_from_package.append(license_object)
         #
         # Identify source code repository
         #
