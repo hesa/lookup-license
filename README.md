@@ -120,7 +120,7 @@ Enter license URL name and press enter.
 ['Apache-2.0']
 ```
 
-## Looking up locense for packages and repositories
+## Looking up license for packages and repositories
 
 With `lookup-license` you can lookup the license for packages and repositories using:
 
