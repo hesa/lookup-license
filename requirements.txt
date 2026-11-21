@@ -16,4 +16,4 @@ diskcache
 packageurl-python
 xmltodict
 appdirs
-pdfminer.six==20260107
+pdfminer.six
